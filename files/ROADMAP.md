@@ -11,9 +11,10 @@ et « Share on LinkedIn » provisionnés, redirect URL
 
 Scopes obtenus : `openid`, `profile`, `email`, `w_member_social`.
 
-## Étape 1 — Authentification ⏳
+## Étape 1 — Authentification ✅
 
-`auth.py` est écrit, pas encore validé.
+Validée le 14 septembre 2026 : nom et URN affichés, `token.json` en 600.
+Token valide jusqu'au 13 novembre 2026 — ré-authentifier avant.
 
 **Validation :** `python auth.py` affiche le nom du membre et un URN de la
 forme `urn:li:person:...`, et `token.json` existe en permissions 600.

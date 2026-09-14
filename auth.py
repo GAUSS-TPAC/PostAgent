@@ -13,7 +13,7 @@ import json
 import os
 import secrets
 import sys
-import threading
+import time
 import webbrowser
 from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -70,14 +70,22 @@ class CallbackHandler(BaseHTTPRequestHandler):
         pass  # silence les logs du serveur
 
 
-def wait_for_callback(timeout=300):
-    """Ouvre un serveur local le temps de recevoir le callback."""
+def wait_for_callback(url, timeout=300):
+    """Ouvre le serveur local, puis le navigateur, et attend le callback.
+
+    Le serveur écoute avant l'ouverture du navigateur, sinon une redirection
+    rapide pourrait arriver sur un port fermé. Les requêtes hors /callback
+    (favicon, préchargement) sont ignorées : on attend le vrai callback.
+    """
     server = HTTPServer(("localhost", 8000), CallbackHandler)
-    server.timeout = timeout
-    thread = threading.Thread(target=server.handle_request)
-    thread.start()
-    thread.join(timeout)
-    server.server_close()
+    server.timeout = 1  # handle_request rend la main chaque seconde
+    webbrowser.open(url)
+    deadline = time.monotonic() + timeout
+    try:
+        while not _result and time.monotonic() < deadline:
+            server.handle_request()
+    finally:
+        server.server_close()
     return _result
 
 
@@ -114,7 +122,11 @@ def fetch_member_urn(access_token):
 
 
 def save_token(payload):
-    TOKEN_FILE.write_text(json.dumps(payload, indent=2))
+    # Créé directement en 600 : le token n'est jamais lisible par un autre
+    # utilisateur, même un instant. Le chmod couvre un fichier préexistant.
+    fd = os.open(TOKEN_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f:
+        json.dump(payload, f, indent=2)
     os.chmod(TOKEN_FILE, 0o600)
 
 
@@ -166,9 +178,8 @@ def authenticate():
 
     print("Ouverture du navigateur pour autoriser l'application...")
     print(f"Si rien ne s'ouvre, copie cette URL :\n{url}\n")
-    webbrowser.open(url)
 
-    result = wait_for_callback()
+    result = wait_for_callback(url)
 
     if not result.get("code"):
         print(f"Echec : {result.get('error', 'aucune reponse recue')}")

@@ -1,6 +1,7 @@
 .env
 !.env.example
 token.json
+*.swp
 __pycache__/
 *.pyc
 venv/

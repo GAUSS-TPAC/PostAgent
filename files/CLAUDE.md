@@ -42,7 +42,7 @@ rester gratuite et permanente.
 | Étape | Statut |
 |---|---|
 | Portail LinkedIn (app, produits, scopes) | fait |
-| `auth.py` — OAuth + récupération de l'URN | écrit, à valider |
+| `auth.py` — OAuth + récupération de l'URN | fait (validé le 14/09/2026, token jusqu'au 13/11/2026) |
 | `linkedin.py` — client de publication | à faire |
 | `publisher.py` + workflow GitHub Actions | à faire |
 | `mcp_server.py` — serveur MCP | à faire |
