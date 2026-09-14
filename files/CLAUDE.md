@@ -43,7 +43,7 @@ rester gratuite et permanente.
 |---|---|
 | Portail LinkedIn (app, produits, scopes) | fait |
 | `auth.py` — OAuth + récupération de l'URN | fait (validé le 14/09/2026, token jusqu'au 13/11/2026) |
-| `linkedin.py` — client de publication | à faire |
+| `linkedin.py` — client de publication | fait (validé le 14/09/2026, post réel publié) |
 | `publisher.py` + workflow GitHub Actions | à faire |
 | `mcp_server.py` — serveur MCP | à faire |
 
@@ -64,7 +64,14 @@ Vérifiés au 11 septembre 2026, sur l'app `Post-Agent`.
 - Publication : `POST /rest/posts`. L'ancien `/v2/ugcPosts` fonctionne encore
   mais est l'ancienne surface — ne l'utilise pas pour du code neuf.
 - Header `LinkedIn-Version` obligatoire, format `AAAAMM`. **Vérifie la valeur
-  courante via le MCP Learn**, ne la devine pas.
+  courante via le MCP Learn**, ne la devine pas. Au 14/09/2026 : `202608`
+  (chaque version est supportée au moins un an).
+- Réponse de `POST /rest/posts` : 201, identifiant du post dans l'en-tête
+  `x-restli-id` (corps vide).
+- Le champ `commentary` est au format *little* : les caractères
+  `| { } @ [ ] ( ) < > # \ * _ ~` doivent être échappés par `\`, sinon le
+  texte est tronqué silencieusement. `linkedin.py` échappe tout sauf `#`
+  pour garder les hashtags actifs.
 - Header `X-Restli-Protocol-Version: 2.0.0` requis.
 - Limite : environ 150 posts par membre et par jour. Sans objet ici.
 

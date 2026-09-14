@@ -22,7 +22,10 @@ forme `urn:li:person:...`, et `token.json` existe en permissions 600.
 Pièges connus : `redirect_uri_mismatch` si l'URL diffère d'un caractère ;
 `invalid_client` si le secret est mal copié.
 
-## Étape 2 — Client de publication
+## Étape 2 — Client de publication ✅
+
+Validée le 14 septembre 2026 : post « test » publié sur le profil, `post_id`
+retourné. Version d'API `202608`, à remonter avant l'été 2027.
 
 `linkedin.py` : deux fonctions, `publish(text, visibility)` et `me()`.
 Lecture du token par variable d'environnement puis fichier (voir
