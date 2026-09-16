@@ -38,15 +38,21 @@ payload `/rest/posts`.
 **Validation :** un post « test » apparaît réellement sur le profil, et son
 `post_id` est retourné.
 
-## Étape 3 — Planification
+## Étape 3 — Planification (écrite, à valider)
 
 `publisher.py` + `.github/workflows/publish.yml` (cron `*/15 * * * *`).
-Secrets GitHub : `LINKEDIN_ACCESS_TOKEN`, `LINKEDIN_PERSON_URN`.
+Secrets GitHub : `LINKEDIN_ACCESS_TOKEN`, `LINKEDIN_PERSON_URN` (posés le
+14/09/2026). L'expiration du token vient de `token_expiry.json`, versionné :
+il ne contient que la date, donc pas de secret supplémentaire à maintenir.
 
-**Validation :** un post daté à +20 minutes part tout seul, poste éteint. Puis
-relancer le workflow à la main sur la même queue ne republie rien (NF5).
+Vérifié hors ligne, sur un dépôt jetable et un faux client LinkedIn :
+publication d'un post dû, rejeu sans republication, échec API laissant le
+fichier dans `publishing/`, fichier invalide mis de côté, et push concurrent
+d'un autre poste absorbé par `pull --rebase`.
 
-À inclure dès cette étape : alerte si le token expire dans moins de 7 jours.
+**Validation (reste à faire sur GitHub) :** un post daté à +20 minutes part
+tout seul, poste éteint. Puis relancer le workflow à la main sur la même queue
+ne republie rien (NF5).
 
 ## Étape 4 — Serveur MCP
 

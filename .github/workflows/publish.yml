@@ -1,0 +1,60 @@
+name: Publication LinkedIn
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write  # pousser les déplacements queue/ -> publishing/ -> published/
+  issues: write    # ouvrir l'alerte d'expiration du token
+
+# Deux runs ne traitent jamais la queue en même temps. Un run en cours
+# n'est pas annulé : l'interrompre entre le push et l'appel API bloquerait un post.
+concurrency:
+  group: publisher
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+
+      - name: Publier les posts dus
+        env:
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          python publisher.py --commit
+
+      # Une seule issue ouverte à la fois : GitHub envoie un e-mail à sa création,
+      # sans répéter l'alerte à chaque run.
+      - name: Alerte expiration du token
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          days=$(python publisher.py --days-left)
+          echo "Token LinkedIn : $days jours restants"
+          if [ "$days" -lt 7 ]; then
+            gh label create token-expiry --color D93F0B --force
+            open=$(gh issue list --label token-expiry --state open --json number --jq length)
+            if [ "$open" = "0" ]; then
+              gh issue create --label token-expiry \
+                --title "Token LinkedIn : expiration dans $days jours" \
+                --body "Relancer \`python auth.py\` en local, puis mettre à jour les secrets LINKEDIN_ACCESS_TOKEN et LINKEDIN_TOKEN_EXPIRES_AT. Fermer cette issue ensuite."
+            fi
+            echo "::warning::Token LinkedIn expire dans $days jours"
+          fi

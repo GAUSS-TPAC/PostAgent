@@ -20,7 +20,8 @@ rester gratuite et permanente.
    En CI, les secrets viennent de GitHub Secrets.
 3. **Idempotence.** Le publisher tourne toutes les 15 minutes et peut rejouer.
    Un post ne doit jamais partir deux fois. Le fichier de queue est déplacé
-   *avant* l'appel API, jamais après.
+   *avant* l'appel API, jamais après — et en CI le déplacement est **poussé**
+   avant l'appel, sinon il n'existe pas pour le run suivant.
 4. **Échec bruyant.** Une publication ratée doit faire échouer le workflow et
    laisser une trace. Jamais de `except: pass`.
 5. **Vérifie la doc avant de coder un appel API.** L'API LinkedIn est
@@ -44,7 +45,7 @@ rester gratuite et permanente.
 | Portail LinkedIn (app, produits, scopes) | fait |
 | `auth.py` — OAuth + récupération de l'URN | fait (validé le 14/09/2026, token jusqu'au 13/11/2026) |
 | `linkedin.py` — client de publication | fait (validé le 14/09/2026, post réel publié) |
-| `publisher.py` + workflow GitHub Actions | à faire |
+| `publisher.py` + workflow GitHub Actions | écrit, à valider en conditions réelles |
 | `mcp_server.py` — serveur MCP | à faire |
 
 Voir `ROADMAP.md` pour le détail et les critères de validation.

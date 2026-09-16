@@ -36,6 +36,10 @@ USERINFO_URL = "https://api.linkedin.com/v2/userinfo"
 
 TOKEN_FILE = Path(__file__).parent / "token.json"
 
+# Date d'expiration seule, sans le token : versionnée pour que le workflow
+# puisse alerter avant l'échéance sans qu'on ait à gérer un secret de plus.
+EXPIRY_FILE = Path(__file__).parent / "token_expiry.json"
+
 # Rempli par le handler HTTP, lu par le thread principal.
 _result = {}
 
@@ -128,6 +132,7 @@ def save_token(payload):
     with os.fdopen(fd, "w") as f:
         json.dump(payload, f, indent=2)
     os.chmod(TOKEN_FILE, 0o600)
+    EXPIRY_FILE.write_text(json.dumps({"expires_at": payload["expires_at"]}, indent=2) + "\n")
 
 
 def load_token():
@@ -207,6 +212,10 @@ def authenticate():
     print(f"URN        : {person_urn}")
     print(f"Token valide jusqu'au {expires_at:%Y-%m-%d}")
     print(f"Enregistre dans {TOKEN_FILE}")
+    print("\nPense a mettre a jour le secret GitHub :")
+    print("  python -c \"import json;print(json.load(open('token.json'))['access_token'],end='')\""
+          " | gh secret set LINKEDIN_ACCESS_TOKEN")
+    print(f"  git add {EXPIRY_FILE.name} && git commit -m 'Renouvelle le token' && git push")
     return 0
 
 

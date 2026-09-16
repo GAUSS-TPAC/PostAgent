@@ -53,8 +53,15 @@ publishing/2026-09-15T0900.json  en cours, verrou implicite
         +-- échec  --> reste ici, workflow en erreur, arbitrage humain
 ```
 
-Le nom de fichier porte l'horodatage prévu. Le publisher traite tout fichier
-dont l'horodatage est passé.
+Le nom de fichier porte l'horodatage prévu, mais le publisher se fie au champ
+`scheduled_at`, qui porte le fuseau horaire. Un fichier sans fuseau, ou
+illisible, est mis de côté dans `publishing/` : le laisser dans `queue/`
+ferait échouer le workflow toutes les 15 minutes, et l'alerte se noierait dans
+son propre bruit.
+
+En CI, le verrou réel n'est pas le déplacement mais le **push** qui le suit :
+chaque run repart du dépôt distant, donc un déplacement non poussé n'existe
+pas. Si ce push échoue, rien n'est publié.
 
 Format d'un fichier de queue :
 
