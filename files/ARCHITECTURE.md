@@ -5,7 +5,7 @@
 Le système a deux points d'entrée indépendants qui partagent le même cœur.
 
 ```
-  Conversation (Claude Desktop)          GitHub Actions (cron 15 min)
+  Conversation (Claude Desktop)          GitHub Actions (cron + dispatch)
              |                                      |
       mcp_server.py                           publisher.py
              |                                      |
@@ -28,9 +28,29 @@ nuit et dépend d'une connexion partagée : il ne peut structurellement pas
 garantir qu'un post parte à 9h.
 
 GitHub Actions fournit un exécuteur permanent, gratuit dans les quotas visés,
-avec gestion des secrets intégrée. Le compromis assumé : le cron GitHub peut
-dériver de 5 à 15 minutes aux heures de pointe. Sans importance pour du post
-LinkedIn.
+avec gestion des secrets intégrée.
+
+**Le cron GitHub n'est pas une horloge.** Mesuré sur ce dépôt du 16 au
+18 septembre 2026, avec `*/15 * * * *` : 12 exécutions en 40 heures au lieu
+de 160, et des écarts de **2 h 12 à 5 h 33** entre deux runs. GitHub traite
+les événements planifiés au mieux et supprime les exécutions en période de
+charge, d'autant plus sur un dépôt public. L'estimation initiale de « 5 à
+15 minutes de dérive » était fausse d'un ordre de grandeur.
+
+Conséquence de conception : **l'horloge est déplacée dans le publisher.**
+Un run qui démarre en avance attend l'heure exacte du post, dans la limite de
+20 minutes (`WAIT_WINDOW`). Le cron ne décide plus de l'heure de publication,
+il ne fait qu'offrir des occasions d'agir.
+
+Pourquoi 20 minutes et pas davantage : l'attente doit rester inférieure à
+l'intervalle réel entre deux runs (2 h au minimum observé). Une fenêtre de
+plusieurs heures ferait convoiter le même post par deux runs successifs, et
+transformerait la concurrence en problème quotidien plutôt qu'en cas
+théorique.
+
+Le workflow accepte aussi `repository_dispatch`, pour qu'une horloge externe
+précise (un Cloudflare Worker) puisse le déclencher à l'heure voulue. Le cron
+reste en place comme filet de sécurité.
 
 ## Pourquoi la queue vit dans git
 
@@ -52,6 +72,15 @@ publishing/2026-09-15T0900.json  en cours, verrou implicite
         |
         +-- échec  --> reste ici, workflow en erreur, arbitrage humain
 ```
+
+### Péremption
+
+Un post dû depuis plus de 3 heures (`STALE_AFTER`) n'est pas publié : il part
+dans `stale/` et le workflow échoue. Publier un post des heures après l'heure
+voulue est un dégât public, pas un rattrapage — le créneau d'audience visé
+n'existe plus, et l'auteur découvre la publication après coup. La décision de
+republier revient à l'humain, qui n'a qu'à redater le fichier et le remettre
+dans `queue/`.
 
 Le nom de fichier porte l'horodatage prévu, mais le publisher se fie au champ
 `scheduled_at`, qui porte le fuseau horaire. Un fichier sans fuseau, ou

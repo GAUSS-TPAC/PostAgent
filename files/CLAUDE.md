@@ -18,7 +18,7 @@ rester gratuite et permanente.
 2. **Aucun secret dans le dépôt.** `.env` et `token.json` sont dans
    `.gitignore`. Ne les lis pas, ne les affiche pas, ne les commite jamais.
    En CI, les secrets viennent de GitHub Secrets.
-3. **Idempotence.** Le publisher tourne toutes les 15 minutes et peut rejouer.
+3. **Idempotence.** Le publisher tourne à chaque run et peut rejouer.
    Un post ne doit jamais partir deux fois. Le fichier de queue est déplacé
    *avant* l'appel API, jamais après — et en CI le déplacement est **poussé**
    avant l'appel, sinon il n'existe pas pour le run suivant.

@@ -3,6 +3,10 @@ name: Publication LinkedIn
 on:
   schedule:
     - cron: "*/15 * * * *"
+  # Horloge externe (Cloudflare Worker à venir) : le cron GitHub reste comme
+  # filet de sécurité, les deux déclencheurs mènent au même job.
+  repository_dispatch:
+    types: [publish]
   workflow_dispatch:
 
 permissions:
@@ -18,7 +22,8 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # 20 min d'attente possible (WAIT_WINDOW) + marge de publication.
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v7
         with:

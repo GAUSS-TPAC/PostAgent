@@ -26,7 +26,7 @@ final. C'est ce qui maintient le projet petit.
 | ID | Contrainte | Vérification |
 |---|---|---|
 | NF1 | Coût nul en fonctionnement : pas de VPS, pas d'abonnement | facture à 0 |
-| NF2 | La publication part même poste éteint. Dérive tolérée : ±15 min | test d'un post programmé la nuit |
+| NF2 | La publication part même poste éteint. Dérive tolérée : ±30 min | test d'un post programmé la nuit |
 | NF3 | API officielle uniquement, aucun scraping | revue de code |
 | NF4 | Secrets hors du dépôt, en GitHub Secrets uniquement | `git log -p` ne contient aucun secret |
 | NF5 | Idempotence : aucun post publié deux fois | rejouer le publisher sur une queue déjà traitée |
@@ -48,6 +48,17 @@ le workflow échoue — un humain tranche. Un fichier ne repart jamais tout seul
 Le pire cas résiduel : l'appel LinkedIn aboutit mais la réponse se perd. Le
 post est publié, le fichier reste en `publishing/`. On préfère cette situation
 — visible et corrigeable à la main — à un doublon publié.
+
+## Contrainte héritée de l'exécuteur
+
+Le cron GitHub dérive de 2 h à 5 h 30 (mesuré, voir ARCHITECTURE.md). NF2 est
+donc intenable si l'heure de publication dépend du cron. Elle dépend désormais
+d'une attente bornée à 20 minutes dans le publisher, qui ramène la dérive
+sous les ±30 minutes retenus — à condition qu'un run démarre dans les
+20 minutes précédant l'heure prévue. Quand ce n'est pas le cas, le post part
+en retard, et au-delà de 3 heures il ne part plus du tout (péremption).
+
+C'est cette réserve qui justifie l'horloge externe prévue ensuite.
 
 ## Contrainte héritée du fournisseur
 
