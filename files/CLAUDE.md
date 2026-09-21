@@ -44,7 +44,7 @@ rester gratuite et permanente.
 |---|---|
 | Portail LinkedIn (app, produits, scopes) | fait |
 | `auth.py` — OAuth + récupération de l'URN | fait (validé le 14/09/2026, token jusqu'au 13/11/2026) |
-| `linkedin.py` — client de publication | fait (validé le 14/09/2026, post réel publié) |
+| `linkedin.py` — client de publication | fait — `publish`, `me`, `delete` ; phases A, B, C.8-C.9 de TESTING.md passées le 20/09/2026 |
 | `publisher.py` + workflow GitHub Actions | écrit, à valider en conditions réelles |
 | `mcp_server.py` — serveur MCP | à faire |
 
@@ -72,7 +72,28 @@ Vérifiés au 11 septembre 2026, sur l'app `Post-Agent`.
 - Le champ `commentary` est au format *little* : les caractères
   `| { } @ [ ] ( ) < > # \ * _ ~` doivent être échappés par `\`, sinon le
   texte est tronqué silencieusement. `linkedin.py` échappe tout sauf `#`
-  pour garder les hashtags actifs.
+  pour garder les hashtags actifs. **Vérifié visuellement le 20/09/2026** :
+  LinkedIn restitue bien `(parenthèses)` et non `\(parenthèses\)`, et un `#`
+  isolé s'affiche tel quel.
+- Suppression : `DELETE /rest/posts/{urn encodé}` avec l'en-tête
+  `X-RestLi-Method: DELETE`. **La doc annonce l'opération idempotente (« Post
+  deletions are idempotent... will return a 204 »), l'API renvoie en réalité
+  404 sur un post déjà supprimé.** Constaté le 21/09/2026 sur deux appels
+  successifs au même URN. `delete()` retourne donc `False` sur 404 plutôt que
+  de lever une exception : l'état visé est atteint, le post n'est plus là.
+- Longueur du `commentary` : **3 000**. La page Posts API ne chiffre rien et se
+  borne au code `FIELD_LENGTH_TOO_LONG` ; le nombre vient de l'ancienne surface
+  (UGC Post API) et du changelog de juillet 2021 qui l'a porté de 1 300 à
+  3 000. Vérifié via le MCP Learn le 21/09/2026.
+- **L'unité de comptage n'est documentée nulle part.** `linkedin.py` compte en
+  unités UTF-16 (`utf16_length`), pas en points de code : la plateforme est en
+  Java, et c'est la mesure la plus stricte des deux. Un emoji hors BMP vaut 1
+  pour `len()` et 2 en UTF-16 — 1 501 emoji passeraient un contrôle en `len()`
+  tout en dépassant la limite. Mesuré sur le texte **échappé**, seul à partir
+  sur le réseau. Établi empiriquement le 21/09/2026 : 3 000 unités UTF-16 avec
+  emoji sont acceptées. Reste indéterminé si LinkedIn compte en points de code
+  (notre contrôle serait alors un peu trop strict) — un post de 3 000 points de
+  code et 3 003 unités UTF-16 trancherait.
 - Header `X-Restli-Protocol-Version: 2.0.0` requis.
 - Limite : environ 150 posts par membre et par jour. Sans objet ici.
 

@@ -11,6 +11,7 @@ Identifiants lus dans cet ordre :
 Usage manuel :
     python linkedin.py --me
     python linkedin.py --publish "Texte du post"
+    python linkedin.py --delete urn:li:share:123
 """
 
 import json
@@ -18,6 +19,7 @@ import os
 import re
 import sys
 from pathlib import Path
+from urllib.parse import quote
 
 import requests
 
@@ -33,6 +35,13 @@ TOKEN_FILE = Path(__file__).parent / "token.json"
 # Non échappés, LinkedIn tronque ou avale silencieusement une partie du texte.
 # '#' est volontairement laissé tel quel pour que les hashtags restent actifs.
 _LITTLE_RESERVED = re.compile(r"([\\|{}@\[\]()<>*_~])")
+
+# Longueur maximale du commentary. La page Posts API ne la chiffre nulle part :
+# elle se borne à un code d'erreur FIELD_LENGTH_TOO_LONG. Le nombre vient de
+# l'ancienne surface (UGC Post API, « maximum length of the text of a UGC Post
+# is 3000 characters ») et du changelog de juillet 2021 qui l'a portée de 1 300
+# à 3 000. Vérifié sur Microsoft Learn le 21/09/2026.
+MAX_COMMENTARY = 3000
 
 
 class LinkedInError(RuntimeError):
@@ -69,6 +78,18 @@ def escape_little(text):
     return _LITTLE_RESERVED.sub(r"\\\1", text)
 
 
+def utf16_length(text):
+    """Longueur en unités UTF-16.
+
+    `len()` compte des points de code : un emoji hors BMP y vaut 1 alors qu'il
+    occupe 2 unités UTF-16. La doc ne dit pas dans quelle unité LinkedIn compte,
+    mais la plateforme est en Java, dont les chaînes sont en UTF-16. À défaut de
+    certitude, on retient la plus stricte des deux : une validation en `len()`
+    serait permissive et laisserait partir des posts rejetés en 400.
+    """
+    return len(text.encode("utf-16-le")) // 2
+
+
 def publish(text, visibility="PUBLIC"):
     """Publie un post texte sur le profil du membre. Retourne le post_id.
 
@@ -81,6 +102,20 @@ def publish(text, visibility="PUBLIC"):
     if visibility not in ("PUBLIC", "CONNECTIONS"):
         raise ValueError(f"Visibilité invalide : {visibility}")
 
+    # La mesure porte sur le texte échappé, seul à partir sur le réseau : c'est
+    # lui que LinkedIn mesure pour FIELD_LENGTH_TOO_LONG. Mesurer le texte brut
+    # laisserait passer un post bourré de parenthèses, chacune coûtant un
+    # backslash de plus. L'erreur cite les deux nombres quand ils diffèrent,
+    # sinon « 2 980 caractères refusés » serait incompréhensible.
+    commentary = escape_little(text)
+    length = utf16_length(commentary)
+    if length > MAX_COMMENTARY:
+        raw = utf16_length(text)
+        detail = f"{length} unités UTF-16"
+        if length != raw:
+            detail += f" après échappement ({raw} avant)"
+        raise ValueError(f"Texte trop long : {detail}, maximum {MAX_COMMENTARY}")
+
     token, urn = _credentials()
     response = requests.post(
         POSTS_URL,
@@ -92,7 +127,7 @@ def publish(text, visibility="PUBLIC"):
         },
         json={
             "author": urn,
-            "commentary": escape_little(text),
+            "commentary": commentary,
             "visibility": visibility,
             "distribution": {
                 "feedDistribution": "MAIN_FEED",
@@ -112,6 +147,39 @@ def publish(text, visibility="PUBLIC"):
         # Le post est probablement parti : on le signale plutôt que de réessayer.
         raise LinkedInError(201, "réponse sans en-tête x-restli-id, vérifier le profil")
     return post_id
+
+
+def delete(post_id):
+    """Supprime un post. Retourne True s'il a été supprimé, False s'il n'existait plus.
+
+    Prérequis du protocole de test : sans suppression fiable, aucun test de
+    publication ne doit être lancé (voir TESTING.md).
+
+    Un 404 n'est pas une erreur ici. LinkedIn annonce la suppression comme
+    idempotente, mais renvoie en pratique 404 sur un post déjà supprimé selon
+    l'ancienneté : les deux cas mènent au même état — le post n'est plus là.
+    Le distinguer par la valeur de retour, plutôt que par une exception, évite
+    d'avoir à envelopper chaque nettoyage dans un try/except.
+    """
+    if not post_id or not post_id.startswith("urn:li:"):
+        raise ValueError(f"post_id invalide : {post_id!r}")
+
+    token, _ = _credentials()
+    response = requests.delete(
+        f"{POSTS_URL}/{quote(post_id, safe='')}",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "LinkedIn-Version": LINKEDIN_VERSION,
+            "X-Restli-Protocol-Version": "2.0.0",
+            "X-RestLi-Method": "DELETE",
+        },
+        timeout=30,
+    )
+    if response.status_code in (200, 204):
+        return True
+    if response.status_code == 404:
+        return False
+    raise LinkedInError(response.status_code, response.text)
 
 
 def me():
@@ -137,6 +205,8 @@ if __name__ == "__main__":
         print(me())
     elif len(sys.argv) == 3 and sys.argv[1] == "--publish":
         print(f"Publié : {publish(sys.argv[2])}")
+    elif len(sys.argv) == 3 and sys.argv[1] == "--delete":
+        print("Supprimé" if delete(sys.argv[2]) else "Introuvable (déjà supprimé ?)")
     else:
         print(__doc__)
         sys.exit(2)

@@ -73,6 +73,33 @@ publishing/2026-09-15T0900.json  en cours, verrou implicite
         +-- échec  --> reste ici, workflow en erreur, arbitrage humain
 ```
 
+### Ce que le verrou par fichier ne protège pas
+
+Le déplacement `queue/` → `publishing/` sérialise les traitements **au sein
+d'un même clone**. Entre deux runners concurrents, il ne protège rien : chacun
+a son propre clone du dépôt, chacun voit le fichier dans `queue/`, chacun le
+déplace chez lui, et les deux publient. Le conflit n'apparaît qu'au `push`,
+après les appels API — donc trop tard : le doublon est déjà sur le profil.
+
+D'où le garde-fou au niveau de l'exécuteur, dans le workflow :
+
+```yaml
+concurrency:
+  group: publisher
+  cancel-in-progress: false
+```
+
+`cancel-in-progress: false` est le point important. Annuler un run en cours
+pourrait l'interrompre entre le push du verrou et l'appel API, laissant un
+fichier bloqué dans `publishing/` pour rien. On préfère faire attendre le
+second run.
+
+Le chevauchement est aujourd'hui impossible : l'écart minimum mesuré entre
+deux runs (2 h 12) dépasse largement la fenêtre d'attente (20 min). Mais avec
+le `repository_dispatch` de l'horloge externe, les déclenchements deviendront
+fréquents et rapprochés, et le chevauchement deviendra la norme. Le garde-fou
+est en place avant d'en avoir besoin, pas après le premier doublon.
+
 ### Péremption
 
 Un post dû depuis plus de 3 heures (`STALE_AFTER`) n'est pas publié : il part

@@ -21,7 +21,8 @@ Conséquences, non négociables :
 
 - Étape 1 validée : `python auth.py --status` retourne un token valide et un
   URN de la forme `urn:li:person:...`
-- `linkedin.py` écrit, avec `publish()`, `me()` et `delete(post_id)`
+- `linkedin.py` écrit, avec `publish()`, `me()` et `delete(post_id)` — les
+  trois existent depuis le 20/09/2026
 - MCP Microsoft Learn accessible dans la session
 - Alan devant son profil LinkedIn, prêt à vérifier visuellement
 
@@ -111,8 +112,8 @@ proprement. À exécuter avant la mise en service réelle, pas après.
 | C.1 | Token invalide | altérer un caractère du token en mémoire | erreur explicite mentionnant 401, pas de trace ambiguë |
 | C.2 | Token expiré | forcer `expires_at` dans le passé | message clair invitant à relancer `auth.py`, **avant** tout appel réseau |
 | C.3 | Texte vide | `publish("")` | refus côté client, aucun appel HTTP émis |
-| C.4 | Texte trop long | 3 500 caractères (limite LinkedIn : 3 000) | refus côté client avec le nombre de caractères, aucun appel HTTP |
-| C.5 | Texte à la limite | exactement 3 000 caractères | publication acceptée |
+| C.4 | Texte trop long | 3 500 caractères, **et** 1 501 emoji hors BMP (3 002 unités UTF-16 pour 1 501 points de code) | refus côté client avec le nombre d'unités, aucun appel HTTP |
+| C.5 | Texte à la limite | exactement 3 000 **unités UTF-16**, emoji inclus | publication acceptée |
 | C.6 | URN absent | supprimer `person_urn` de l'environnement et du fichier | erreur explicite, pas de `KeyError` brut |
 | C.7 | Réseau coupé | couper le wifi puis publier | erreur réseau lisible, pas de trace Python nue |
 | C.8 | `post_id` inexistant | `delete("urn:li:share:000000")` | erreur 404 gérée, message clair |
@@ -124,6 +125,10 @@ diagnostic.
 
 C.7 est le scénario le plus réaliste dans les conditions de connexion d'Alan.
 Le traiter correctement n'est pas du luxe.
+
+C.4 et C.5 se comptent en unités UTF-16, jamais en `len()`. Un jeu de test
+uniquement ASCII ne prouve rien ici : les deux mesures y sont égales. Il faut
+des emoji hors BMP pour que l'écart apparaisse.
 
 ---
 
@@ -211,4 +216,15 @@ Une ligne par exécution. C'est la seule trace que ce protocole doit laisser.
 
 | Date | Scénario | Résultat | Observation |
 |---|---|---|---|
-| | | | |
+| 20/09/2026 | A.1 identité | OK | nom et URN identiques à `token.json` |
+| 20/09/2026 | A.2 publication minimale | OK | `urn:li:share:7507481932696350720`, visibilité `CONNECTIONS` |
+| 20/09/2026 | A.3 confirmation visuelle | OK | post vu par Alan |
+| 21/09/2026 | A.4 suppression | OK | `delete()` retourne `True` |
+| 21/09/2026 | A.5 confirmation de suppression | OK | post disparu |
+| 21/09/2026 | C.8 post_id inexistant | OK | `False`, pas d'exception ; URN malformé rejeté avant l'appel réseau |
+| 21/09/2026 | C.9 double suppression | OK | seconde suppression `False`, sans exception |
+| 21/09/2026 | B.1 rendu du texte | OK | `urn:li:share:7507586747585859584` |
+| 21/09/2026 | B.2.1 à B.2.6 | OK | aucun backslash parasite, accents et double saut corrects |
+| 21/09/2026 | B.3 suppression | OK | `True`, profil nettoyé |
+| 21/09/2026 | C.4 texte trop long | OK | 3 500 ASCII, 1 501 emoji (3 002 UTF-16) et 3 010 + échappement refusés, **aucun appel HTTP émis** |
+| 21/09/2026 | C.5 texte à la limite | OK | 3 000 unités UTF-16 dont emoji hors BMP : `urn:li:share:7507594360507682816` accepté puis supprimé |
