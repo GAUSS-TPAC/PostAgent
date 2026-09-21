@@ -1,8 +1,25 @@
+# Secrets — jamais dans le dépôt. token_expiry.json, lui, est versionné :
+# il ne contient que la date d'expiration, pas le token.
 .env
 !.env.example
 token.json
-*.swp
+
+# Python
 __pycache__/
 *.pyc
 venv/
 .venv/
+
+# Node / Wrangler (Worker de l'horloge externe)
+node_modules/
+.wrangler/
+# .dev.vars porte les secrets du Worker en local, comme .env pour Python.
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+# wrangler.jsonc / wrangler.toml sont versionnés : c'est la configuration du
+# Worker, pas un secret. Seul le dossier .wrangler/ (état et cache) est exclu.
+
+# Divers
+*.swp
+.DS_Store

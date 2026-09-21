@@ -1,0 +1,55 @@
+name: Déploiement du Worker
+
+# Le déploiement passe par la CI : la connexion locale (partage mobile,
+# ~2,3 s par requête) est trop lente pour wrangler, qui téléverse et
+# interroge l'API Cloudflare plusieurs fois par déploiement.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "clock/**"
+      - ".github/workflows/deploy-clock.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read  # aucune écriture : ce workflow ne touche pas au dépôt
+
+# Deux déploiements simultanés écraseraient la même version du Worker.
+# Ici on annule le run en cours : contrairement au publisher, aucune
+# publication n'est en jeu, et seule la dernière version compte.
+concurrency:
+  group: deploy-clock
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: clock/package-lock.json
+
+      - name: Installer les dépendances
+        working-directory: clock
+        run: npm ci
+
+      # `secrets` reçoit des NOMS de variables, dont les valeurs viennent du
+      # bloc `env` ci-dessous. Les valeurs ne transitent jamais par la ligne
+      # de commande et sont masquées par GitHub dans les journaux.
+      - name: Déployer
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: clock
+          secrets: |
+            DISPATCH_TOKEN
+            TRIGGER_KEY
+        env:
+          DISPATCH_TOKEN: ${{ secrets.DISPATCH_PAT }}
+          TRIGGER_KEY: ${{ secrets.CLOCK_TRIGGER_KEY }}

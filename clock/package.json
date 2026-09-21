@@ -1,0 +1,15 @@
+{
+  "name": "clock",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker qui déclenche le workflow de publication toutes les 15 minutes via `repository_dispatch`.",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "wrangler": "^4.135.0"
+  }
+}

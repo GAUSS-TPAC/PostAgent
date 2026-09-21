@@ -1,0 +1,31 @@
+name = "post-agent-clock"
+main = "src/index.js"
+compatibility_date = "2026-09-21"
+
+# Toutes les 15 minutes, en UTC — sans importance ici, l'intervalle est
+# régulier et le choix de l'heure de publication appartient à publisher.py.
+[triggers]
+crons = ["*/15 * * * *"]
+
+# Valeurs non sensibles.
+[vars]
+GITHUB_OWNER = "GAUSS-TPAC"
+GITHUB_REPO = "PostAgent"
+
+# Secrets — jamais ici. DISPATCH_TOKEN et TRIGGER_KEY sont déposés à chaque
+# déploiement par .github/workflows/deploy-clock.yml, depuis les secrets du
+# dépôt DISPATCH_PAT et CLOCK_TRIGGER_KEY.
+
+# Journaux et traces, à activer avant la production : `enabled` seul ne suffit
+# pas pour les traces, il faut aussi `traces.enabled`. Volume attendu de
+# 96 invocations par jour, donc échantillonnage à 100 % sans souci de coût.
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+
+[observability.traces]
+enabled = true
+head_sampling_rate = 1
