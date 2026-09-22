@@ -54,7 +54,8 @@ rester gratuite et permanente.
 | Portail LinkedIn (app, produits, scopes) | fait |
 | `auth.py` — OAuth + récupération de l'URN | fait (validé le 14/09/2026, token jusqu'au 13/11/2026) |
 | `linkedin.py` — client de publication | fait — `publish`, `me`, `delete` ; phases A, B, C.8-C.9 de TESTING.md passées le 20/09/2026 |
-| `publisher.py` + workflow GitHub Actions | écrit, à valider en conditions réelles |
+| `publisher.py` + workflow GitHub Actions | fait (validé le 23/09/2026, dérive mesurée : 1,7 s) |
+| `clock/` — horloge Cloudflare Worker | fait (déployé le 22/09/2026, sans URL publique) |
 | `mcp_server.py` — serveur MCP | à faire |
 
 Voir `ROADMAP.md` pour le détail et les critères de validation.

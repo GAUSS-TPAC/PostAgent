@@ -31,8 +31,20 @@ final. C'est ce qui maintient le projet petit.
 | NF4 | Secrets hors du dépôt, en GitHub Secrets uniquement | `git log -p` ne contient aucun secret |
 | NF5 | Idempotence : aucun post publié deux fois | rejouer le publisher sur une queue déjà traitée |
 | NF6 | Échec visible : workflow en échec et trace exploitable | injecter un token invalide |
-| NF7 | Sobriété : environ 300 lignes, dépendances minimales | `wc -l src/*.py` |
+| NF7 | Sobriété : chaque module lisible d'une traite, 250 lignes max ; le publisher en production ne dépend que de `requests` et `python-dotenv` | `wc -l *.py` ; `requirements.txt` |
 | NF8 | Cœur métier LinkedIn isolé de l'orchestration, réutilisable en multi-tenant | `linkedin.py` n'importe ni la queue, ni le MCP, ni les Actions |
+
+### Note sur NF7
+
+La cible initiale — « environ 300 lignes » pour tout le projet — a été dépassée
+dès l'étape 3 et ne mesurait plus rien : la contrainte devenait un mensonge
+qu'on reconduisait. Elle est réécrite le 23/09/2026 en deux engagements
+vérifiables : un plafond par module, et un plancher de dépendances là où il
+compte vraiment, c'est-à-dire en CI.
+
+Le SDK `mcp` vit donc dans `requirements-mcp.txt`, jamais dans
+`requirements.txt`. Le workflow de publication installe le second et ignore le
+premier : une panne du serveur MCP ne peut pas empêcher un post de partir.
 
 ## Le point dur
 

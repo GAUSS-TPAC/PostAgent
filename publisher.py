@@ -15,13 +15,13 @@ Usage:
 """
 
 import json
-import subprocess
 import sys
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import linkedin
+import repo
 
 ROOT = Path(__file__).parent
 QUEUE = ROOT / "queue"
@@ -39,24 +39,6 @@ WAIT_WINDOW = timedelta(minutes=20)
 # pire que ne pas le publier : le contexte visé (une heure de forte audience,
 # une actualité) n'existe plus. Décision rendue à l'humain.
 STALE_AFTER = timedelta(hours=3)
-
-
-def git_sync(message):
-    """Commite et pousse l'état des trois dossiers. Lève une exception en cas d'échec.
-
-    En CI, un déplacement non poussé n'existe pas : le run suivant repart du
-    dépôt distant et verrait encore le fichier dans queue/. Le verrou réel est
-    donc le push qui précède l'appel API, pas le déplacement local.
-    """
-    subprocess.run(["git", "add", "-A", "queue", "publishing", "published", "stale"], check=True)
-    # --no-gpg-sign : ni le runner GitHub ni le bot n'ont de clé, et une config
-    # locale commit.gpgsign=true ferait échouer la publication.
-    subprocess.run(["git", "commit", "-q", "--no-gpg-sign", "-m", message], check=True)
-    if subprocess.run(["git", "push", "-q"]).returncode != 0:
-        # Quelqu'un a poussé entre-temps (nouveau post programmé, annulation).
-        # Si le rebase entre en conflit sur ce fichier, on s'arrête : pas de publication.
-        subprocess.run(["git", "pull", "-q", "--rebase"], check=True)
-        subprocess.run(["git", "push", "-q"], check=True)
 
 
 def load_due(now):
@@ -100,7 +82,7 @@ def publish_due(commit):
         print(f"::error::Fichier de queue invalide, mis de côté dans publishing/ : {error}")
         path.rename(PUBLISHING / path.name)
     if errors and commit:
-        git_sync(f"Mise de côté de {len(errors)} fichier(s) de queue invalide(s)")
+        repo.sync(f"Mise de côté de {len(errors)} fichier(s) de queue invalide(s)", sign=False)
 
     # Périmés : sortis de la queue pour qu'ils ne soient plus jamais candidats,
     # mais jamais publiés. Republier à contretemps est un dégât public.
@@ -112,7 +94,7 @@ def publish_due(commit):
         )
         path.rename(STALE / path.name)
     if stale and commit:
-        git_sync(f"Péremption de {len(stale)} post(s) non publié(s)")
+        repo.sync(f"Péremption de {len(stale)} post(s) non publié(s)", sign=False)
 
     if due:
         # Token expiré ou révoqué : on échoue ici, avant d'avoir verrouillé un fichier.
@@ -129,7 +111,7 @@ def publish_due(commit):
         locked = PUBLISHING / path.name
         path.rename(locked)
         if commit:
-            git_sync(f"Publication en cours : {path.name}")
+            repo.sync(f"Publication en cours : {path.name}", sign=False)
 
         try:
             post["post_id"] = linkedin.publish(post["text"], post["visibility"])
@@ -142,7 +124,7 @@ def publish_due(commit):
         (PUBLISHED / path.name).write_text(json.dumps(post, indent=2, ensure_ascii=False) + "\n")
         locked.unlink()
         if commit:
-            git_sync(f"Publié : {path.name}")
+            repo.sync(f"Publié : {path.name}", sign=False)
         print(f"Publié : {path.name} -> {post['post_id']}")
 
     if not due:
@@ -151,13 +133,18 @@ def publish_due(commit):
 
 
 def publish_now(text, visibility):
-    """Publie immédiatement et journalise. Retourne le post_id.
+    """Publie immédiatement et journalise. Retourne un compte rendu, jamais une exception
+    après une publication réussie.
 
     Le journal n'est pas un confort : un post publié sans trace est un post
     qu'on ne sait plus supprimer. Le 14/09/2026, un post de test est resté une
-    semaine en ligne faute d'avoir noté son identifiant. L'écriture a lieu
-    *après* la publication — s'il y a un instant où l'un existe sans l'autre,
-    autant que ce soit le fichier qui manque, jamais l'inverse.
+    semaine en ligne faute d'avoir noté son identifiant.
+
+    Point délicat : une fois LinkedIn appelé, le post existe. Si le commit ou
+    le push échoue ensuite, remonter une exception nue ferait croire que rien
+    n'est parti — et la relance publierait en double. On rend donc toujours le
+    post_id, avec `pushed` à faux et ce qu'il reste à faire. C'est NF5 au
+    niveau de l'appelant.
     """
     post_id = linkedin.publish(text, visibility)
     now = datetime.now(timezone.utc)
@@ -169,11 +156,52 @@ def publish_now(text, visibility):
         "source": "publish_now",
     }
     path = PUBLISHED / f"manuel-{now:%Y-%m-%dT%H%M%S}.json"
-    path.write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n")
-    print(f"Publié : {post_id}")
-    print(f"Journalisé : {path.relative_to(ROOT)}")
-    print(f"Pour supprimer : .venv/bin/python linkedin.py --delete {post_id}")
-    return post_id
+    resultat = {
+        "post_id": post_id,
+        "journal": str(path.relative_to(ROOT)),
+        "delete_command": f".venv/bin/python linkedin.py --delete {post_id}",
+        "pushed": False,
+    }
+    try:
+        path.write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n")
+        repo.sync(f"Publié (manuel) : {post_id}", sign=True)
+        resultat["pushed"] = True
+        resultat["message"] = f"Publié et journalisé : {post_id}"
+    except Exception as exc:
+        resultat["warning"] = (
+            f"PUBLIÉ, post_id={post_id} — mais le journal n'est pas poussé : {exc}. "
+            "Le post EST en ligne : ne relance pas, tu publierais en double. "
+            f"Pousse le journal à la main, ou supprime le post avec : {resultat['delete_command']}"
+        )
+        resultat["message"] = f"Publié ({post_id}), journal non poussé"
+    return resultat
+
+
+def cancel_post(filename):
+    """Retire un post programmé de la file. Retourne un compte rendu.
+
+    Le fichier est supprimé, pas archivé : git est déjà l'archive, c'est la
+    raison d'être d'une file versionnée. `git show` retrouve le contenu.
+
+    Un fichier déjà passé dans publishing/ n'est plus annulable : il est
+    verrouillé, voire déjà publié. On refuse plutôt que de laisser croire à
+    une annulation qui n'annule rien.
+    """
+    repo.pull()
+    cible = QUEUE / filename
+    if not cible.exists():
+        if (PUBLISHING / filename).exists():
+            raise RuntimeError(
+                f"{filename} est déjà en cours de publication, trop tard pour annuler. "
+                "Vérifie le profil avant toute action."
+            )
+        if (PUBLISHED / filename).exists():
+            raise RuntimeError(f"{filename} est déjà publié, l'annulation n'a plus de sens.")
+        raise FileNotFoundError(f"{filename} est introuvable dans queue/")
+
+    cible.unlink()
+    repo.sync(f"Annulation : {filename}", sign=True)
+    return {"cancelled": filename, "pushed": True}
 
 
 def days_left():
@@ -203,6 +231,12 @@ if __name__ == "__main__":
             print('Usage: python publisher.py --publish-now "<texte>" '
                   "--visibility PUBLIC|CONNECTIONS")
             sys.exit(2)
-        sys.exit(0 if publish_now(args[0], args[2]) else 1)
+        r = publish_now(args[0], args[2])
+        print(r["message"])
+        print(f"Journal : {r['journal']}")
+        print(f"Pour supprimer : {r['delete_command']}")
+        if r.get("warning"):
+            print(f"::error::{r['warning']}")
+        sys.exit(0 if r["pushed"] else 1)
 
     sys.exit(publish_due(commit="--commit" in sys.argv))

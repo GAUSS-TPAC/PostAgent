@@ -13,6 +13,7 @@ import json
 import os
 import secrets
 import sys
+import subprocess
 import time
 import webbrowser
 from datetime import datetime, timedelta, timezone
@@ -22,6 +23,9 @@ from urllib.parse import parse_qs, urlencode, urlparse
 
 import requests
 from dotenv import load_dotenv
+
+import repo
+import secret
 
 load_dotenv()
 
@@ -155,6 +159,10 @@ def show_status():
     print(f"URN        : {token['person_urn']}")
     print(f"Expire le  : {expires_at:%Y-%m-%d}")
 
+    sync = secret.in_sync(token)
+    etat = {True: "a jour", False: "DIVERGENT - relance python auth.py", None: "inconnu (gh injoignable)"}
+    print(f"Secret CI  : {etat[sync]}")
+
     if days < 0:
         print("Statut     : EXPIRE - relance python auth.py")
         return 1
@@ -203,6 +211,7 @@ def authenticate():
         {
             "access_token": access_token,
             "expires_at": expires_at.isoformat(),
+            "obtained_at": datetime.now(timezone.utc).isoformat(),
             "person_urn": person_urn,
             "name": name,
         }
@@ -212,10 +221,17 @@ def authenticate():
     print(f"URN        : {person_urn}")
     print(f"Token valide jusqu'au {expires_at:%Y-%m-%d}")
     print(f"Enregistre dans {TOKEN_FILE}")
-    print("\nPense a mettre a jour le secret GitHub :")
-    print("  python -c \"import json;print(json.load(open('token.json'))['access_token'],end='')\""
-          " | gh secret set LINKEDIN_ACCESS_TOKEN")
-    print(f"  git add {EXPIRY_FILE.name} && git commit -m 'Renouvelle le token' && git push")
+
+    # Les deux copies sont mises a jour dans la foulee, jamais "plus tard" :
+    # c'est l'ecart entre les deux qui casse la publication en CI.
+    secret.push(access_token)
+    print("Secret GitHub LINKEDIN_ACCESS_TOKEN mis a jour")
+
+    repo._git("add", str(EXPIRY_FILE.name), timeout=repo.LOCAL_TIMEOUT)
+    repo._git("commit", "-q", "-m", "Renouvelle le token LinkedIn",
+              timeout=repo.LOCAL_TIMEOUT)
+    repo._git("push", "-q", timeout=repo.NETWORK_TIMEOUT)
+    print(f"{EXPIRY_FILE.name} commite et pousse")
     return 0
 
 

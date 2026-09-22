@@ -253,5 +253,7 @@ Une ligne par exécution. C'est la seule trace que ce protocole doit laisser.
 | 21/09/2026 | B.2.1 à B.2.6 | OK | aucun backslash parasite, accents et double saut corrects |
 | 21/09/2026 | B.3 suppression | OK | `True`, profil nettoyé |
 | 21/09/2026 | C.4 texte trop long | OK | 3 500 ASCII, 1 501 emoji (3 002 UTF-16) et 3 010 + échappement refusés, **aucun appel HTTP émis** |
+| 23/09/2026 | E.3 publication différée | **OK** | run `35794080710` déclenché par `repository_dispatch`, durée 12 min 17 s dont l'attente ; dérive de **1,7 s** (prévu 22:58:00 UTC, publié 22:58:01.7) ; `urn:li:share:7508298590117597185`, supprimé |
+| 23/09/2026 | E.15 horloge externe | **OK** | Worker déployé le 22/09, dispatch toutes les 15 min, premier tick 2 min après le déploiement |
 | 22/09/2026 | Incident | **ÉCHEC, clos** | post « test » du 14/09 resté 8 jours en PUBLIC ; `post_id` perdu, donc supprimé à la main par Alan depuis l'interface le 22/09. Trois garde-fous ajoutés le même jour |
 | 21/09/2026 | C.5 texte à la limite | OK | 3 000 unités UTF-16 dont emoji hors BMP : `urn:li:share:7507594360507682816` accepté puis supprimé |

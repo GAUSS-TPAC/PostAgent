@@ -38,7 +38,7 @@ payload `/rest/posts`.
 **Validation :** un post « test » apparaît réellement sur le profil, et son
 `post_id` est retourné.
 
-## Étape 3 — Planification (écrite, à valider)
+## Étape 3 — Planification ✅
 
 `publisher.py` + `.github/workflows/publish.yml` (cron `*/15 * * * *`).
 Secrets GitHub : `LINKEDIN_ACCESS_TOKEN`, `LINKEDIN_PERSON_URN` (posés le
@@ -50,9 +50,12 @@ publication d'un post dû, rejeu sans republication, échec API laissant le
 fichier dans `publishing/`, fichier invalide mis de côté, et push concurrent
 d'un autre poste absorbé par `pull --rebase`.
 
-**Validation (reste à faire sur GitHub) :** un post daté à +20 minutes part
-tout seul, poste éteint. Puis relancer le workflow à la main sur la même queue
-ne republie rien (NF5).
+**Validée le 23/09/2026.** E.13 (péremption) le 18/09, E.3 (publication
+différée) le 23/09 : dérive de 1,7 seconde, très en deçà des ±30 min de NF2.
+
+La précision vient de l'horloge externe — un Cloudflare Worker déployé le
+22/09, qui tire `repository_dispatch` toutes les 15 minutes — et de l'attente
+bornée côté publisher. Le cron GitHub seul dérivait de 2 h à 5 h 30.
 
 ## Étape 4 — Serveur MCP
 
