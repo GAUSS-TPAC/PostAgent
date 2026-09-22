@@ -26,10 +26,10 @@ wrangler enchaîne plusieurs appels à l'API Cloudflare par déploiement, ce
 qu'une connexion en partage mobile (~2,3 s par requête) ne supporte pas.
 
 `.github/workflows/deploy-clock.yml` déploie à chaque push touchant `clock/`,
-et à la demande depuis l'onglet Actions. Il dépose aussi les deux secrets du
-Worker à chaque déploiement : ils n'ont pas à être posés à la main.
+et à la demande depuis l'onglet Actions. Il dépose aussi le secret du
+Worker à chaque déploiement : il n'a pas à être posé à la main.
 
-### Les quatre secrets du dépôt
+### Les trois secrets du dépôt
 
 À créer dans **Settings → Secrets and variables → Actions → New repository
 secret** du dépôt `PostAgent`.
@@ -39,7 +39,6 @@ secret** du dépôt `PostAgent`.
 | `CLOUDFLARE_API_TOKEN` | dash.cloudflare.com → My Profile → API Tokens → Create Token → gabarit **Edit Cloudflare Workers** | — (authentifie le déploiement) |
 | `CLOUDFLARE_ACCOUNT_ID` | dash.cloudflare.com → Workers & Pages → colonne de droite, **Account ID** | — (cible du déploiement) |
 | `DISPATCH_PAT` | GitHub → Settings → Developer settings → Personal access tokens → Fine-grained | secret `DISPATCH_TOKEN` |
-| `CLOCK_TRIGGER_KEY` | une chaîne aléatoire de ton choix, par exemple `openssl rand -hex 32` | secret `TRIGGER_KEY` |
 
 Le nom change en route pour `DISPATCH_PAT` : **GitHub refuse tout secret dont
 le nom commence par `GITHUB_`**, d'où `DISPATCH_PAT` dans le dépôt et
@@ -63,16 +62,20 @@ Aucune carte bancaire requise.
 
 ## Vérification
 
-Déclenchement manuel, sans attendre le cron :
+Le Worker n'a **pas d'URL publique** : `workers_dev = false`, aucun handler
+`fetch`, donc rien à appeler depuis l'extérieur. Pour vérifier qu'il tourne :
+
+- **Journaux du Worker** : `npx wrangler tail`, ou le tableau de bord
+  Cloudflare → Workers & Pages → post-agent-clock → Logs. Chaque tick écrit
+  une ligne `{"event":"dispatch","ok":true,...}`.
+- **Côté GitHub** : l'onglet Actions doit montrer des exécutions de
+  « Publication LinkedIn » déclenchées par `repository_dispatch`.
+
+Pour déclencher une publication à la main, sans passer par le Worker :
 
 ```bash
-curl -X POST https://post-agent-clock.<ton-sous-domaine>.workers.dev/trigger \
-     -H "X-Trigger-Key: <CLOCK_TRIGGER_KEY>"
+gh workflow run publish.yml
 ```
-
-Réponse attendue : `dispatch émis`. Le workflow de publication doit apparaître
-dans l'onglet Actions dans la minute, avec `repository_dispatch` comme
-déclencheur.
 
 ## Développement local
 
@@ -113,6 +116,18 @@ node_modules/@cloudflare/workerd-linux-64/bin/workerd serve <config.capnp>
 ```bash
 npx wrangler tail
 ```
+
+## Pas de surface publique
+
+Une première version exposait un endpoint `/trigger` protégé par une clé
+partagée. Il a été retiré : c'était la seule surface d'attaque du Worker, et
+il imposait d'enregistrer un sous-domaine `workers.dev`, que le compte n'avait
+pas. Sans lui, il n'y a plus rien à protéger ni à enregistrer — et le
+déclenchement manuel existait déjà ailleurs, par `gh workflow run publish.yml`.
+
+D'où `workers_dev = false` et `preview_urls = false` dans `wrangler.toml` : le
+second est nécessaire, sinon wrangler réclame quand même le sous-domaine pour
+servir les URL de prévisualisation.
 
 ## Ce que ce Worker ne fait pas
 

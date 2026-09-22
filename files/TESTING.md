@@ -5,7 +5,8 @@ Protocole de test du projet. À suivre dans l'ordre, sans sauter d'étape.
 ## Incident du 14/09/2026 — à lire avant tout test
 
 Un post de test publié le 14/09/2026 pour valider l'étape 2 est resté **une
-semaine en ligne, en visibilité PUBLIC**, découvert par hasard le 22/09.
+semaine en ligne, en visibilité PUBLIC**, découvert par hasard le 22/09 et
+supprimé à la main le jour même, l'API ne permettant pas de le retrouver.
 
 Trois causes, toutes corrigées depuis :
 
@@ -194,6 +195,8 @@ cette phase sont en `CONNECTIONS` et supprimés après vérification.
 | E.7 | Fichier bloqué | laisser un fichier dans `publishing/` | signalé, jamais republié automatiquement | NF5 |
 | E.8 | JSON malformé | virgule en trop dans un fichier de queue | échec explicite nommant le fichier | NF6 |
 | E.9 | Alerte d'expiration | token à moins de 7 jours | avertissement émis avant l'échéance | NF6 |
+| E.15 | Horloge externe | vérifier les journaux du Worker après un tick | ligne `{"event":"dispatch","ok":true}` et un run déclenché par `repository_dispatch` | NF2 |
+| E.16 | Absence de surface publique | `curl https://post-agent-clock.*.workers.dev/` | aucune réponse : le Worker n'a ni URL ni handler `fetch` | NF3 |
 | E.10 | Plusieurs posts dus | trois fichiers échus simultanément | tous publiés, aucun doublon | NF5 |
 | E.11 | Attente bornée | fichier daté à +10 min, run lancé à la main | le run attend, publie à l'heure exacte, dérive ≤ 1 min | NF2 |
 | E.12 | Hors fenêtre d'attente | fichier daté à +45 min (> `WAIT_WINDOW`) | ignoré ce run, reste en `queue/`, aucune attente | NF2 |
@@ -210,6 +213,9 @@ précisément à ce test.
 
 E.14 vérifie l'autre moitié : une fois dans `stale/`, un post ne doit plus
 faire échouer les runs suivants, sinon l'alerte se noie dans son bruit.
+
+Le déclenchement manuel du workflow se fait par `gh workflow run publish.yml`,
+jamais par une URL du Worker : celui-ci n'en expose aucune.
 
 E.9 se teste sans attendre deux mois : modifier `expires_at` dans `token.json`
 suffit.
@@ -247,5 +253,5 @@ Une ligne par exécution. C'est la seule trace que ce protocole doit laisser.
 | 21/09/2026 | B.2.1 à B.2.6 | OK | aucun backslash parasite, accents et double saut corrects |
 | 21/09/2026 | B.3 suppression | OK | `True`, profil nettoyé |
 | 21/09/2026 | C.4 texte trop long | OK | 3 500 ASCII, 1 501 emoji (3 002 UTF-16) et 3 010 + échappement refusés, **aucun appel HTTP émis** |
-| 22/09/2026 | Incident | **ÉCHEC** | post « test » du 14/09 resté 8 jours en PUBLIC ; `post_id` perdu, suppression manuelle par Alan. Trois garde-fous ajoutés le 22/09 |
+| 22/09/2026 | Incident | **ÉCHEC, clos** | post « test » du 14/09 resté 8 jours en PUBLIC ; `post_id` perdu, donc supprimé à la main par Alan depuis l'interface le 22/09. Trois garde-fous ajoutés le même jour |
 | 21/09/2026 | C.5 texte à la limite | OK | 3 000 unités UTF-16 dont emoji hors BMP : `urn:li:share:7507594360507682816` accepté puis supprimé |

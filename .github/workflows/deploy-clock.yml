@@ -49,7 +49,5 @@ jobs:
           workingDirectory: clock
           secrets: |
             DISPATCH_TOKEN
-            TRIGGER_KEY
         env:
           DISPATCH_TOKEN: ${{ secrets.DISPATCH_PAT }}
-          TRIGGER_KEY: ${{ secrets.CLOCK_TRIGGER_KEY }}
