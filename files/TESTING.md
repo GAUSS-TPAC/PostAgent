@@ -2,6 +2,23 @@
 
 Protocole de test du projet. À suivre dans l'ordre, sans sauter d'étape.
 
+## Incident du 14/09/2026 — à lire avant tout test
+
+Un post de test publié le 14/09/2026 pour valider l'étape 2 est resté **une
+semaine en ligne, en visibilité PUBLIC**, découvert par hasard le 22/09.
+
+Trois causes, toutes corrigées depuis :
+
+| Cause | Correctif |
+|---|---|
+| `publish()` avait `visibility="PUBLIC"` par défaut | la visibilité est un argument obligatoire, sans valeur par défaut |
+| `linkedin.py --publish` publiait sans laisser de trace | ce sous-commande n'existe plus ; `publisher.py --publish-now` journalise dans `published/` |
+| le `post_id` n'a été noté nulle part | le journal est écrit à chaque publication, et la commande de suppression est affichée |
+
+Ce qui a rendu l'incident irrattrapable : **l'API ne permet pas de lister ses
+propres posts** sans le scope `r_member_social`, non accordé. Sans le
+`post_id`, la suppression ne peut se faire que depuis l'interface web.
+
 ## Règle absolue
 
 **LinkedIn n'a pas d'environnement de test.** Aucune sandbox, aucun mode
@@ -12,6 +29,9 @@ Conséquences, non négociables :
 
 1. Toute publication de test est en visibilité `CONNECTIONS`, jamais `PUBLIC`.
 2. Toute publication de test est supprimée immédiatement après vérification.
+   « Immédiatement » veut dire dans le même échange, pas plus tard : c'est le
+   report qui a produit l'incident du 14/09/2026. Tant qu'un post de test est
+   en ligne, la suppression passe avant toute autre tâche.
 3. Aucun test n'est lancé sans qu'Alan soit présent et prévenu.
 4. Ne relance jamais un test « pour voir » après un échec sans avoir compris
    la cause : une erreur côté réponse HTTP ne garantit pas que rien n'a été
@@ -227,4 +247,5 @@ Une ligne par exécution. C'est la seule trace que ce protocole doit laisser.
 | 21/09/2026 | B.2.1 à B.2.6 | OK | aucun backslash parasite, accents et double saut corrects |
 | 21/09/2026 | B.3 suppression | OK | `True`, profil nettoyé |
 | 21/09/2026 | C.4 texte trop long | OK | 3 500 ASCII, 1 501 emoji (3 002 UTF-16) et 3 010 + échappement refusés, **aucun appel HTTP émis** |
+| 22/09/2026 | Incident | **ÉCHEC** | post « test » du 14/09 resté 8 jours en PUBLIC ; `post_id` perdu, suppression manuelle par Alan. Trois garde-fous ajoutés le 22/09 |
 | 21/09/2026 | C.5 texte à la limite | OK | 3 000 unités UTF-16 dont emoji hors BMP : `urn:li:share:7507594360507682816` accepté puis supprimé |

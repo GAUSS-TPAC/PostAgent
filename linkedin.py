@@ -10,8 +10,11 @@ Identifiants lus dans cet ordre :
 
 Usage manuel :
     python linkedin.py --me
-    python linkedin.py --publish "Texte du post"
     python linkedin.py --delete urn:li:share:123
+
+Publier depuis le terminal passe par `publisher.py --publish-now`, qui
+journalise le post_id. Ce module ne l'expose pas : un post publié sans trace
+est un post qu'on ne sait plus supprimer.
 """
 
 import json
@@ -90,8 +93,14 @@ def utf16_length(text):
     return len(text.encode("utf-16-le")) // 2
 
 
-def publish(text, visibility="PUBLIC"):
+def publish(text, visibility):
     """Publie un post texte sur le profil du membre. Retourne le post_id.
+
+    `visibility` n'a volontairement pas de valeur par défaut. Le 14/09/2026, un
+    `publish(text)` lancé pour un test est parti en PUBLIC et est resté une
+    semaine sur le profil : une valeur par défaut, si raisonnable soit-elle,
+    finit par publier ce que personne n'a demandé. Un appelant qui ne nomme pas
+    la visibilité échoue maintenant à l'appel, pas sur le profil.
 
     Aucune nouvelle tentative en cas d'échec : un 5xx peut masquer un post
     réellement créé, et rejouer risquerait un doublon (NF5). L'erreur remonte,
@@ -203,8 +212,6 @@ def me():
 if __name__ == "__main__":
     if len(sys.argv) == 2 and sys.argv[1] == "--me":
         print(me())
-    elif len(sys.argv) == 3 and sys.argv[1] == "--publish":
-        print(f"Publié : {publish(sys.argv[2])}")
     elif len(sys.argv) == 3 and sys.argv[1] == "--delete":
         print("Supprimé" if delete(sys.argv[2]) else "Introuvable (déjà supprimé ?)")
     else:

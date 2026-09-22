@@ -11,6 +11,7 @@ Usage:
     python publisher.py              # local : déplace les fichiers, sans git
     python publisher.py --commit     # CI : chaque étape est poussée avant la suivante
     python publisher.py --days-left  # jours restants avant expiration du token
+    python publisher.py --publish-now "texte" --visibility CONNECTIONS
 """
 
 import json
@@ -73,8 +74,10 @@ def load_due(now):
                 raise ValueError("scheduled_at sans fuseau horaire")
             if not post.get("text", "").strip():
                 raise ValueError("text vide")
-            if post.get("visibility", "PUBLIC") not in ("PUBLIC", "CONNECTIONS"):
-                raise ValueError(f"visibility invalide : {post['visibility']}")
+            # Pas de valeur par défaut : l'omission est une erreur, pas un
+            # consentement à publier en public.
+            if post.get("visibility") not in ("PUBLIC", "CONNECTIONS"):
+                raise ValueError(f"visibility absente ou invalide : {post.get('visibility')!r}")
         except (ValueError, KeyError, TypeError) as exc:
             errors.append((path, f"{path.name} : {exc}"))
             continue
@@ -129,7 +132,7 @@ def publish_due(commit):
             git_sync(f"Publication en cours : {path.name}")
 
         try:
-            post["post_id"] = linkedin.publish(post["text"], post.get("visibility", "PUBLIC"))
+            post["post_id"] = linkedin.publish(post["text"], post["visibility"])
         except Exception as exc:
             # On s'arrête au premier échec : les posts suivants restent dans queue/.
             print(f"::error::{path.name} laissé dans publishing/, arbitrage manuel : {exc}")
@@ -145,6 +148,32 @@ def publish_due(commit):
     if not due:
         print("Aucun post dû.")
     return 1 if (errors or stale) else 0
+
+
+def publish_now(text, visibility):
+    """Publie immédiatement et journalise. Retourne le post_id.
+
+    Le journal n'est pas un confort : un post publié sans trace est un post
+    qu'on ne sait plus supprimer. Le 14/09/2026, un post de test est resté une
+    semaine en ligne faute d'avoir noté son identifiant. L'écriture a lieu
+    *après* la publication — s'il y a un instant où l'un existe sans l'autre,
+    autant que ce soit le fichier qui manque, jamais l'inverse.
+    """
+    post_id = linkedin.publish(text, visibility)
+    now = datetime.now(timezone.utc)
+    record = {
+        "text": text,
+        "visibility": visibility,
+        "post_id": post_id,
+        "published_at": now.isoformat(),
+        "source": "publish_now",
+    }
+    path = PUBLISHED / f"manuel-{now:%Y-%m-%dT%H%M%S}.json"
+    path.write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n")
+    print(f"Publié : {post_id}")
+    print(f"Journalisé : {path.relative_to(ROOT)}")
+    print(f"Pour supprimer : .venv/bin/python linkedin.py --delete {post_id}")
+    return post_id
 
 
 def days_left():
@@ -165,4 +194,15 @@ if __name__ == "__main__":
     if "--days-left" in sys.argv:
         print(days_left())
         sys.exit(0)
+
+    if "--publish-now" in sys.argv:
+        args = sys.argv[sys.argv.index("--publish-now") + 1:]
+        # La visibilité est exigée explicitement : c'est l'omission qui a
+        # causé l'incident du 14/09/2026, pas une erreur de frappe.
+        if len(args) != 3 or args[1] != "--visibility":
+            print('Usage: python publisher.py --publish-now "<texte>" '
+                  "--visibility PUBLIC|CONNECTIONS")
+            sys.exit(2)
+        sys.exit(0 if publish_now(args[0], args[2]) else 1)
+
     sys.exit(publish_due(commit="--commit" in sys.argv))

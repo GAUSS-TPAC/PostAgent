@@ -22,9 +22,18 @@ rester gratuite et permanente.
    Un post ne doit jamais partir deux fois. Le fichier de queue est déplacé
    *avant* l'appel API, jamais après — et en CI le déplacement est **poussé**
    avant l'appel, sinon il n'existe pas pour le run suivant.
-4. **Échec bruyant.** Une publication ratée doit faire échouer le workflow et
+4. **Jamais de publication implicite.** `publish()` exige une visibilité, il
+   n'y a pas de valeur par défaut. Un fichier de queue sans `visibility` est
+   refusé. Publier depuis le terminal passe par
+   `publisher.py --publish-now "<texte>" --visibility PUBLIC|CONNECTIONS`, qui
+   journalise le `post_id` dans `published/`. Ne rétablis aucun défaut, même
+   « raisonnable » : c'est exactement ce qui a produit l'incident du
+   14/09/2026 (voir TESTING.md). Un post publié sans trace est un post qu'on
+   ne sait plus supprimer — l'API ne permet pas de relire ses propres posts
+   sans le scope `r_member_social`, qui n'est pas accordé.
+5. **Échec bruyant.** Une publication ratée doit faire échouer le workflow et
    laisser une trace. Jamais de `except: pass`.
-5. **Vérifie la doc avant de coder un appel API.** L'API LinkedIn est
+6. **Vérifie la doc avant de coder un appel API.** L'API LinkedIn est
    versionnée par mois. Utilise le serveur MCP Microsoft Learn
    (`https://learn.microsoft.com/api/mcp`) pour confirmer les endpoints, les
    headers et la version courante plutôt que de te fier à ta mémoire.
@@ -96,6 +105,11 @@ Vérifiés au 11 septembre 2026, sur l'app `Post-Agent`.
   code et 3 003 unités UTF-16 trancherait.
 - Header `X-Restli-Protocol-Version: 2.0.0` requis.
 - Limite : environ 150 posts par membre et par jour. Sans objet ici.
+- **Relire ses propres posts est impossible** avec les scopes accordés :
+  `GET /rest/posts?q=author` renvoie 403 `ACCESS_DENIED`, il exige
+  `r_member_social`, qui est restreint. Conséquence directe : un `post_id`
+  perdu est définitivement perdu, et le post ne peut plus être supprimé que
+  depuis l'interface web. D'où la journalisation obligatoire.
 
 ## Hors périmètre, décidé
 
