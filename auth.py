@@ -179,15 +179,10 @@ def authenticate():
         return 1
 
     state = secrets.token_urlsafe(16)
-    url = f"{AUTH_URL}?" + urlencode(
-        {
-            "response_type": "code",
-            "client_id": CLIENT_ID,
-            "redirect_uri": REDIRECT_URI,
-            "state": state,
-            "scope": SCOPES,
-        }
-    )
+    url = f"{AUTH_URL}?" + urlencode({
+        "response_type": "code", "client_id": CLIENT_ID,
+        "redirect_uri": REDIRECT_URI, "state": state, "scope": SCOPES,
+    })
 
     print("Ouverture du navigateur pour autoriser l'application...")
     print(f"Si rien ne s'ouvre, copie cette URL :\n{url}\n")
@@ -227,12 +222,24 @@ def authenticate():
     secret.push(access_token)
     print("Secret GitHub LINKEDIN_ACCESS_TOKEN mis a jour")
 
-    repo._git("add", str(EXPIRY_FILE.name), timeout=repo.LOCAL_TIMEOUT)
-    repo._git("commit", "-q", "-m", "Renouvelle le token LinkedIn",
-              timeout=repo.LOCAL_TIMEOUT)
-    repo._git("push", "-q", timeout=repo.NETWORK_TIMEOUT)
-    print(f"{EXPIRY_FILE.name} commite et pousse")
-    return 0
+    # A partir d'ici, l'essentiel est fait : le token est sauvegarde et la CI
+    # peut publier. Le push de la date d'expiration ne conditionne que l'alerte
+    # a 7 jours. Un echec nu ferait tout relancer un 13 novembre, alors qu'il
+    # ne reste qu'une commande a rejouer.
+    try:
+        repo._git("add", EXPIRY_FILE.name, timeout=repo.LOCAL_TIMEOUT)
+        repo._git("commit", "-q", "-m", "Renouvelle le token LinkedIn",
+                  timeout=repo.LOCAL_TIMEOUT)
+        repo._git("push", "-q", timeout=repo.NETWORK_TIMEOUT)
+        print(f"{EXPIRY_FILE.name} commite et pousse")
+        return 0
+    except Exception as exc:
+        print(f"\nFAIT      : token enregistre, secret GitHub a jour, publication operationnelle."
+              f"\nRESTE     : {EXPIRY_FILE.name} non pousse ({exc}) — sans lui, l'alerte"
+              f"\n            a 7 jours se declenchera sur l'ancienne date."
+              f"\nA REJOUER : git add {EXPIRY_FILE.name} && git commit -m 'Renouvelle le token' && git push"
+              f"\n\nNe relance PAS auth.py : le token est bon, seul ce push manque.")
+        return 1
 
 
 if __name__ == "__main__":

@@ -47,6 +47,22 @@ rester gratuite et permanente.
   publication vit dans git sous forme de fichiers JSON.
 - Pas d'interface graphique. L'interface, c'est la conversation.
 
+## Outillage — pièges constatés
+
+- **Jamais deux `pip install` concurrents dans le même environnement.**
+  Le 23/09/2026 : une installation lancée en tâche de fond et une seconde en
+  premier plan ont écrit dans le même `site-packages`. Résultat, deux
+  `dist-info` rivaux (`mcp-1.9.4` et `mcp-2.2.0`), du code de la 1.x sous
+  l'étiquette de la 2.x, et un `ImportError` sur un paquet pourtant listé par
+  `pip show`. Une heure de diagnostic pour rien. Attends la fin de la première.
+- **`gh` est en 2.4.0 (2022)** : ni `gh variable`, ni `gh secret list --json`.
+  Passe par `gh api` quand un champ précis est nécessaire — l'API REST ne
+  dépend pas de la version du client.
+- **Le SDK `mcp` est épinglé à `2.2.0`**, pas `>=2`. L'API a déjà cassé sans
+  prévenir : `FastMCP` est devenu `MCPServer` en 2.x, et `inputSchema` est
+  devenu `input_schema`. Presque toute la documentation en circulation décrit
+  encore la 1.x. **Inspecte l'API installée, ne code pas de mémoire.**
+
 ## État actuel
 
 | Étape | Statut |
@@ -56,7 +72,7 @@ rester gratuite et permanente.
 | `linkedin.py` — client de publication | fait — `publish`, `me`, `delete` ; phases A, B, C.8-C.9 de TESTING.md passées le 20/09/2026 |
 | `publisher.py` + workflow GitHub Actions | fait (validé le 23/09/2026, dérive mesurée : 1,7 s) |
 | `clock/` — horloge Cloudflare Worker | fait (déployé le 22/09/2026, sans URL publique) |
-| `mcp_server.py` — serveur MCP | à faire |
+| `mcp_server.py` — serveur MCP | écrit le 23/09/2026, à valider en conversation |
 
 Voir `ROADMAP.md` pour le détail et les critères de validation.
 

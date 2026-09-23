@@ -147,23 +147,21 @@ def publish_now(text, visibility):
     niveau de l'appelant.
     """
     post_id = linkedin.publish(text, visibility)
-    now = datetime.now(timezone.utc)
-    record = {
-        "text": text,
-        "visibility": visibility,
-        "post_id": post_id,
-        "published_at": now.isoformat(),
-        "source": "publish_now",
-    }
-    path = PUBLISHED / f"manuel-{now:%Y-%m-%dT%H%M%S}.json"
-    resultat = {
-        "post_id": post_id,
-        "journal": str(path.relative_to(ROOT)),
-        "delete_command": f".venv/bin/python linkedin.py --delete {post_id}",
-        "pushed": False,
-    }
+
+    # À partir d'ici le post existe. TOUT ce qui suit est protégé : une
+    # exception qui s'échapperait ferait croire que rien n'est parti, et la
+    # relance publierait en double. Y compris le calcul du chemin, qui a l'air
+    # inoffensif — c'est justement celui qui a levé en test.
+    resultat = {"post_id": post_id, "pushed": False,
+                "delete_command": f".venv/bin/python linkedin.py --delete {post_id}"}
     try:
-        path.write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n")
+        now = datetime.now(timezone.utc)
+        path = PUBLISHED / f"manuel-{now:%Y-%m-%dT%H%M%S}.json"
+        path.write_text(json.dumps({
+            "text": text, "visibility": visibility, "post_id": post_id,
+            "published_at": now.isoformat(), "source": "publish_now",
+        }, indent=2, ensure_ascii=False) + "\n")
+        resultat["journal"] = str(path)
         repo.sync(f"Publié (manuel) : {post_id}", sign=True)
         resultat["pushed"] = True
         resultat["message"] = f"Publié et journalisé : {post_id}"
@@ -175,33 +173,6 @@ def publish_now(text, visibility):
         )
         resultat["message"] = f"Publié ({post_id}), journal non poussé"
     return resultat
-
-
-def cancel_post(filename):
-    """Retire un post programmé de la file. Retourne un compte rendu.
-
-    Le fichier est supprimé, pas archivé : git est déjà l'archive, c'est la
-    raison d'être d'une file versionnée. `git show` retrouve le contenu.
-
-    Un fichier déjà passé dans publishing/ n'est plus annulable : il est
-    verrouillé, voire déjà publié. On refuse plutôt que de laisser croire à
-    une annulation qui n'annule rien.
-    """
-    repo.pull()
-    cible = QUEUE / filename
-    if not cible.exists():
-        if (PUBLISHING / filename).exists():
-            raise RuntimeError(
-                f"{filename} est déjà en cours de publication, trop tard pour annuler. "
-                "Vérifie le profil avant toute action."
-            )
-        if (PUBLISHED / filename).exists():
-            raise RuntimeError(f"{filename} est déjà publié, l'annulation n'a plus de sens.")
-        raise FileNotFoundError(f"{filename} est introuvable dans queue/")
-
-    cible.unlink()
-    repo.sync(f"Annulation : {filename}", sign=True)
-    return {"cancelled": filename, "pushed": True}
 
 
 def days_left():
@@ -233,7 +204,7 @@ if __name__ == "__main__":
             sys.exit(2)
         r = publish_now(args[0], args[2])
         print(r["message"])
-        print(f"Journal : {r['journal']}")
+        print(f"Journal : {r.get('journal', 'NON ECRIT')}")
         print(f"Pour supprimer : {r['delete_command']}")
         if r.get("warning"):
             print(f"::error::{r['warning']}")

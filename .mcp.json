@@ -3,6 +3,13 @@
     "microsoft-learn": {
       "type": "http",
       "url": "https://learn.microsoft.com/api/mcp"
+    },
+    "post-agent": {
+      "type": "stdio",
+      "command": ".venv/bin/python",
+      "args": [
+        "mcp_server.py"
+      ]
     }
   }
 }

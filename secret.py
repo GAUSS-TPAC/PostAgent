@@ -40,39 +40,49 @@ def push(access_token):
 
 
 def updated_on():
-    """Date de dernière mise à jour du secret, ou None si gh est injoignable.
+    """Horodatage de dernière mise à jour du secret, ou None si gh est injoignable.
+
+    Passe par l'API REST et non par `gh secret list`, qui n'affiche qu'une date
+    sans heure : une divergence créée et corrigée le même jour serait invisible.
+    (`gh secret list --json` donnerait aussi l'heure, mais n'existe pas avant
+    les versions récentes de gh — l'API, elle, ne bouge pas.)
 
     None veut dire « inconnu », jamais « pas à jour » : l'état doit rester
     consultable hors ligne, et une connexion coupée n'est pas une divergence.
     """
     try:
-        r = subprocess.run(["gh", "secret", "list"], capture_output=True, text=True, timeout=60)
+        r = subprocess.run(
+            ["gh", "api", f"repos/{{owner}}/{{repo}}/actions/secrets/{SECRET_NAME}",
+             "--jq", ".updated_at"],
+            capture_output=True, text=True, timeout=60,
+        )
     except (FileNotFoundError, subprocess.TimeoutExpired):
         return None
     if r.returncode != 0:
         return None
-    for ligne in r.stdout.splitlines():
-        champs = ligne.split()
-        if len(champs) > 1 and champs[0] == SECRET_NAME:
-            try:
-                return datetime.fromisoformat(champs[1]).date()
-            except ValueError:
-                return None
-    return None
+    try:
+        return datetime.fromisoformat(r.stdout.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
 
 
 def in_sync(token):
-    """True, False, ou None si l'état du secret n'a pas pu être lu."""
+    """True, False, ou None si l'état du secret n'a pas pu être lu.
+
+    Deux précisions de comparaison, selon ce que le token sait de lui-même :
+    avec `obtained_at`, on compare à la seconde ; sans lui, la date d'obtention
+    est déduite de l'expiration et ne vaut qu'au jour près — comparer à la
+    seconde une valeur approchée produirait de fausses alertes.
+    """
     if not token:
         return None
     maj = updated_on()
     if maj is None:
         return None
+
     obtenu = token.get("obtained_at")
     if obtenu:
-        obtenu = datetime.fromisoformat(obtenu).date()
-    else:
-        # token.json d'avant l'ajout du champ : on déduit de l'expiration.
-        obtenu = (datetime.fromisoformat(token["expires_at"])
-                  - timedelta(days=TOKEN_LIFETIME_DAYS)).date()
-    return maj >= obtenu
+        return maj >= datetime.fromisoformat(obtenu)
+    # token.json d'avant l'ajout du champ : précision limitée au jour.
+    approx = datetime.fromisoformat(token["expires_at"]) - timedelta(days=TOKEN_LIFETIME_DAYS)
+    return maj.date() >= approx.date()
