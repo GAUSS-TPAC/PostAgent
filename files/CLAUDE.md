@@ -22,7 +22,13 @@ rester gratuite et permanente.
    Un post ne doit jamais partir deux fois. Le fichier de queue est déplacé
    *avant* l'appel API, jamais après — et en CI le déplacement est **poussé**
    avant l'appel, sinon il n'existe pas pour le run suivant.
-4. **Jamais de publication implicite.** `publish()` exige une visibilité, il
+4. **Aucun test ne publie.** Tout script de test pose `POSTAGENT_DRY_RUN=1`,
+   qui fait refuser `publish()` avant l'appel réseau. Et **ne jette jamais le
+   retour de `publish()`** : sans le `post_id`, le post est irrécupérable —
+   l'API refuse de lister les posts du membre. Le 23/09/2026, un test censé
+   prouver qu'une publication échoue a publié, parce qu'il croyait avoir
+   corrompu le token et ignorait la valeur rendue.
+5. **Jamais de publication implicite.** `publish()` exige une visibilité, il
    n'y a pas de valeur par défaut. Un fichier de queue sans `visibility` est
    refusé. Publier depuis le terminal passe par
    `publisher.py --publish-now "<texte>" --visibility PUBLIC|CONNECTIONS`, qui
@@ -31,9 +37,9 @@ rester gratuite et permanente.
    14/09/2026 (voir TESTING.md). Un post publié sans trace est un post qu'on
    ne sait plus supprimer — l'API ne permet pas de relire ses propres posts
    sans le scope `r_member_social`, qui n'est pas accordé.
-5. **Échec bruyant.** Une publication ratée doit faire échouer le workflow et
+6. **Échec bruyant.** Une publication ratée doit faire échouer le workflow et
    laisser une trace. Jamais de `except: pass`.
-6. **Vérifie la doc avant de coder un appel API.** L'API LinkedIn est
+7. **Vérifie la doc avant de coder un appel API.** L'API LinkedIn est
    versionnée par mois. Utilise le serveur MCP Microsoft Learn
    (`https://learn.microsoft.com/api/mcp`) pour confirmer les endpoints, les
    headers et la version courante plutôt que de te fier à ta mémoire.
@@ -45,7 +51,9 @@ rester gratuite et permanente.
   raison explicite.
 - Pas de base de données, pas de serveur, pas de framework web. La file de
   publication vit dans git sous forme de fichiers JSON.
-- Pas d'interface graphique. L'interface, c'est la conversation.
+- La conversation reste l'interface principale. Depuis le 02/10/2026, une
+  interface web est prévue pour la version vendable (voir `PRODUIT.md`) ;
+  l'instance actuelle n'en a pas.
 
 ## Outillage — pièges constatés
 
@@ -122,6 +130,10 @@ Vérifiés au 11 septembre 2026, sur l'app `Post-Agent`.
   code et 3 003 unités UTF-16 trancherait.
 - Header `X-Restli-Protocol-Version: 2.0.0` requis.
 - Limite : environ 150 posts par membre et par jour. Sans objet ici.
+- **Un token altéré de quelques caractères reste accepté.** Mesuré le
+  23/09/2026 : dernier caractère d'un token de 350 modifié → `200` sur
+  `/v2/userinfo` ; chaîne franchement invalide → `401`. Pour tester un refus
+  d'authentification, remplace le token en entier.
 - **Relire ses propres posts est impossible** avec les scopes accordés :
   `GET /rest/posts?q=author` renvoie 403 `ACCESS_DENIED`, il exige
   `r_member_social`, qui est restreint. Conséquence directe : un `post_id`
@@ -136,7 +148,9 @@ Vérifiés au 11 septembre 2026, sur l'app `Post-Agent`.
 - **X / Twitter** : depuis février 2026, plus de palier gratuit. Facturation à
   l'appel, avec une forte surtaxe sur les posts contenant un lien. Décision
   reportée et volontairement découplée de l'architecture.
-- **Interface web** : jamais.
+- **Interface web** : levé le 02/10/2026. PostAgent doit rester vendable à
+  tout moment ; l'interface et le multi-clients sont cadrés dans `PRODUIT.md`.
+  N'en code rien avant que son étape soit ouverte.
 
 ## Style de travail attendu
 

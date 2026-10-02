@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>PostAgent — Guide d'utilisation</title>
+<style>
+  @page {
+    size: A4;
+    margin: 22mm 20mm 22mm 20mm;
+    @bottom-left {
+      content: "PostAgent · Guide d'utilisation";
+      font: 8pt "Liberation Sans", Arial, sans-serif; letter-spacing: .12em;
+      text-transform: uppercase; color: #777;
+    }
+    @bottom-right {
+      content: counter(page);
+      font: 700 9pt "Liberation Sans", Arial, sans-serif;
+    }
+    @top-right {
+      content: "SENTINELLE SERVICES";
+      font: 7pt "Liberation Sans", Arial, sans-serif; letter-spacing: .3em; color: #999;
+    }
+  }
+  @page couverture {
+    margin: 0;
+    @bottom-left { content: none; } @bottom-right { content: none; } @top-right { content: none; }
+  }
+
+  :root { --encre: #0a0a0a; --gris: #555; --filet: #d4d4d4; --fond: #f4f4f4; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    margin: 0; color: var(--encre); background: #fff;
+    font: 10pt/1.55 "Liberation Sans", Arial, sans-serif;
+  }
+
+  /* ---------- Couverture ---------- */
+  .couverture {
+    page: couverture; height: 297mm; width: 210mm; position: relative;
+    display: grid; grid-template-columns: 52mm 1fr; overflow: hidden;
+    break-after: page;
+  }
+  .motif {
+    background-color: #000;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cpath d='M22 6 L38 22 L22 38 L6 22 Z' fill='none' stroke='%23888' stroke-width='1.6'/%3E%3Ccircle cx='22' cy='22' r='2.2' fill='%23888'/%3E%3C/svg%3E");
+    background-size: 15mm 15mm;
+    clip-path: polygon(0 0, 100% 0, 88% 4%, 100% 8%, 88% 12%, 100% 16%, 88% 20%, 100% 24%, 88% 28%, 100% 32%, 88% 36%, 100% 40%, 88% 44%, 100% 48%, 88% 52%, 100% 56%, 88% 60%, 100% 64%, 88% 68%, 100% 72%, 88% 76%, 100% 80%, 88% 84%, 100% 88%, 88% 92%, 100% 96%, 88% 100%, 0 100%);
+  }
+  .couverture .contenu {
+    padding: 26mm 22mm 22mm 20mm; display: flex; flex-direction: column;
+  }
+  .maison { display: flex; align-items: center; gap: 4mm; }
+  .maison svg { width: 13mm; height: 13mm; }
+  .maison .nom { font-weight: 700; font-size: 11pt; letter-spacing: .2em; }
+  .maison .sous { font-size: 7.5pt; letter-spacing: .45em; color: var(--gris); }
+
+  .produit { margin-top: auto; }
+  .produit svg { width: 46mm; height: 46mm; margin-left: -6mm; }
+  .produit h1 {
+    margin: 4mm 0 0; font-size: 40pt; line-height: 1; letter-spacing: .06em; font-weight: 700;
+  }
+  .produit .titre {
+    margin-top: 5mm; font-size: 15pt; letter-spacing: .3em; text-transform: uppercase; color: var(--gris);
+  }
+  .produit .accroche {
+    margin-top: 9mm; padding-top: 5mm; border-top: 1.5pt solid var(--encre); width: 70mm;
+    font-size: 10.5pt; color: #333;
+  }
+  .pied {
+    margin-top: auto; display: flex; justify-content: space-between; align-items: end;
+    font-size: 8pt; color: var(--gris); letter-spacing: .08em;
+  }
+  .pied em { font-style: italic; letter-spacing: 0; }
+
+  /* ---------- Corps ---------- */
+  main > p:first-child { font-size: 11pt; color: #333; }
+  h2 {
+    font-size: 17pt; letter-spacing: .04em; margin: 0 0 6mm; padding-bottom: 3mm;
+    border-bottom: 1.5pt solid var(--encre); break-after: avoid;
+  }
+  h2.partie { break-before: page; }
+  h3 {
+    font-size: 11.5pt; margin: 7mm 0 2mm; break-after: avoid;
+    display: flex; align-items: center; gap: 2.5mm;
+  }
+  h3::before {
+    content: ""; width: 2.2mm; height: 2.2mm; background: var(--encre);
+    transform: rotate(45deg); flex: none;
+  }
+  p, li { orphans: 3; widows: 3; }
+  ul, ol { padding-left: 6mm; }
+  li { margin: 1mm 0; }
+  a { color: inherit; }
+  strong { font-weight: 700; }
+
+  code {
+    font: 8.6pt "DejaVu Sans Mono", "Liberation Mono", monospace;
+    background: var(--fond); padding: .2mm 1mm; border-radius: 1mm;
+  }
+  pre {
+    background: var(--fond); border-left: 1.2mm solid var(--encre);
+    padding: 3mm 4mm; margin: 3mm 0 4mm; white-space: pre-wrap; break-inside: avoid;
+  }
+  pre code { background: none; padding: 0; font-size: 8.3pt; line-height: 1.5; }
+
+  blockquote {
+    margin: 3mm 0; padding: 2.5mm 4mm; border: .6pt solid var(--encre);
+    font-style: italic; break-inside: avoid;
+  }
+  blockquote p { margin: 0; }
+
+  table {
+    width: 100%; border-collapse: collapse; margin: 3mm 0 5mm; font-size: 9pt;
+    break-inside: avoid;
+  }
+  th {
+    text-align: left; font-size: 7.5pt; letter-spacing: .12em; text-transform: uppercase;
+    border-bottom: 1.2pt solid var(--encre); padding: 1.8mm 2mm;
+  }
+  td { border-bottom: .5pt solid var(--filet); padding: 1.8mm 2mm; vertical-align: top; }
+
+  .schema { width: 100%; margin: 4mm 0 6mm; }
+</style>
+</head>
+<body>
+
+<section class="couverture">
+  <div class="motif"></div>
+  <div class="contenu">
+    <div class="maison">
+      {{logo_sentinelle}}
+      <div><div class="nom">SENTINELLE</div><div class="sous">SERVICES</div></div>
+    </div>
+
+    <div class="produit">
+      {{logo_postagent}}
+      <h1>POSTAGENT</h1>
+      <div class="titre">Guide d'utilisation</div>
+      <div class="accroche">
+        Publier sur LinkedIn depuis une conversation, avec une planification
+        qui tourne sans serveur.
+      </div>
+    </div>
+
+    <div class="pied">
+      <span><em>Artificial intelligence, built on trust.</em></span>
+      <span>Édition de {{edition}}</span>
+    </div>
+  </div>
+</section>
+
+<main>
+{{corps}}
+</main>
+
+</body>
+</html>

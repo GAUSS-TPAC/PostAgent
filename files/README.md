@@ -35,10 +35,12 @@ python auth.py --status
 
 | Fichier | Contenu |
 |---|---|
+| `GUIDE.md` | Utilisation au quotidien, incidents, commandes de secours |
 | `CLAUDE.md` | Contexte et règles pour l'assistant de code |
 | `SPEC.md` | Besoins fonctionnels et non fonctionnels |
 | `ARCHITECTURE.md` | Conception, cycle de vie d'un post, décisions écartées |
 | `ROADMAP.md` | Étapes et critères de validation |
+| `PRODUIT.md` | Version vendable : multi-clients, interface, étapes P0 à P7 |
 
 ## Sécurité
 

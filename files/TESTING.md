@@ -20,6 +20,25 @@ Ce qui a rendu l'incident irrattrapable : **l'API ne permet pas de lister ses
 propres posts** sans le scope `r_member_social`, non accordé. Sans le
 `post_id`, la suppression ne peut se faire que depuis l'interface web.
 
+## Incident du 23/09/2026 — le test qui a publié
+
+En jouant C.1, un post « ne doit jamais partir » est parti pour de vrai, en
+`CONNECTIONS`, et n'a pas pu être supprimé faute d'avoir gardé son `post_id`.
+
+Deux causes, distinctes :
+
+1. **Le protocole était faux.** C.1 disait « altérer un caractère du token ».
+   Fait littéralement — dernier caractère modifié — LinkedIn a **accepté** le
+   token. Mesuré : dernier caractère changé → `200` ; chaîne franchement
+   invalide → `401`. Un caractère ne suffit pas à invalider un token de
+   350 caractères.
+2. **Le test appelait `publish()` et jetait le retour.** Exactement le motif
+   qui avait causé l'incident du 14/09, reproduit dans un test censé prouver
+   qu'aucune publication n'a lieu.
+
+Corrections appliquées le jour même : verrou `POSTAGENT_DRY_RUN`, C.1 réécrit
+ci-dessous, et interdiction dans CLAUDE.md d'ignorer le retour de `publish()`.
+
 ## Règle absolue
 
 **LinkedIn n'a pas d'environnement de test.** Aucune sandbox, aucun mode
@@ -37,6 +56,14 @@ Conséquences, non négociables :
 4. Ne relance jamais un test « pour voir » après un échec sans avoir compris
    la cause : une erreur côté réponse HTTP ne garantit pas que rien n'a été
    publié. Vérifie visuellement le profil avant toute relance.
+5. **Toute la phase C tourne avec `POSTAGENT_DRY_RUN=1`.** Le verrou refuse
+   toute publication juste avant l'appel réseau, après les contrôles : la
+   validation reste testable, rien n'atteint LinkedIn. Aucun scénario de la
+   phase C n'a besoin de publier.
+6. **Ne jette jamais le retour de `publish()`.** Sans le `post_id`, le post est
+   irrécupérable : l'API refuse de lister les posts du membre (`403`, scope
+   `r_member_social` non accordé), et la suppression ne reste possible que
+   depuis l'interface web.
 
 ## Prérequis
 
@@ -130,7 +157,7 @@ proprement. À exécuter avant la mise en service réelle, pas après.
 
 | ID | Scénario | Provocation | Attendu |
 |---|---|---|---|
-| C.1 | Token invalide | altérer un caractère du token en mémoire | erreur explicite mentionnant 401, pas de trace ambiguë |
+| C.1 | Token invalide | **`me()`**, jamais `publish()`, avec un token **entièrement** remplacé par une chaîne invalide | erreur explicite mentionnant 401, pas de trace ambiguë |
 | C.2 | Token expiré | forcer `expires_at` dans le passé | message clair invitant à relancer `auth.py`, **avant** tout appel réseau |
 | C.3 | Texte vide | `publish("")` | refus côté client, aucun appel HTTP émis |
 | C.4 | Texte trop long | 3 500 caractères, **et** 1 501 emoji hors BMP (3 002 unités UTF-16 pour 1 501 points de code) | refus côté client avec le nombre d'unités, aucun appel HTTP |
@@ -139,6 +166,11 @@ proprement. À exécuter avant la mise en service réelle, pas après.
 | C.7 | Réseau coupé | couper le wifi puis publier | erreur réseau lisible, pas de trace Python nue |
 | C.8 | `post_id` inexistant | `delete("urn:li:share:000000")` | erreur 404 gérée, message clair |
 | C.9 | Double suppression | `delete()` deux fois sur le même id | la seconde échoue proprement, sans exception non gérée |
+
+C.1 passe par `me()` et non par `publish()` : une lecture ne peut rien
+publier, même si le token se révèle valide. Et le token doit être remplacé en
+entier — modifier quelques caractères ne l'invalide pas (voir l'incident du
+23/09).
 
 C.3, C.4 et C.6 doivent être rejetés **avant** tout appel réseau. Une
 validation qui laisse partir la requête gaspille du quota et brouille le
@@ -253,6 +285,8 @@ Une ligne par exécution. C'est la seule trace que ce protocole doit laisser.
 | 21/09/2026 | B.2.1 à B.2.6 | OK | aucun backslash parasite, accents et double saut corrects |
 | 21/09/2026 | B.3 suppression | OK | `True`, profil nettoyé |
 | 21/09/2026 | C.4 texte trop long | OK | 3 500 ASCII, 1 501 emoji (3 002 UTF-16) et 3 010 + échappement refusés, **aucun appel HTTP émis** |
+| 23/09/2026 | Incident C.1 | **ÉCHEC** | test C.1 a publié « ne doit jamais partir » en CONNECTIONS ; `post_id` jeté par le script, suppression manuelle nécessaire. Verrou `POSTAGENT_DRY_RUN` ajouté le jour même |
+| 23/09/2026 | Phase F (étape 4) | **OK** | `schedule_post` → push vérifié côté distant (`50799f0`), `list_queue`, `cancel_post` → file vide (`3d41429`), commits signés |
 | 23/09/2026 | E.3 publication différée | **OK** | run `35794080710` déclenché par `repository_dispatch`, durée 12 min 17 s dont l'attente ; dérive de **1,7 s** (prévu 22:58:00 UTC, publié 22:58:01.7) ; `urn:li:share:7508298590117597185`, supprimé |
 | 23/09/2026 | E.15 horloge externe | **OK** | Worker déployé le 22/09, dispatch toutes les 15 min, premier tick 2 min après le déploiement |
 | 22/09/2026 | Incident | **ÉCHEC, clos** | post « test » du 14/09 resté 8 jours en PUBLIC ; `post_id` perdu, donc supprimé à la main par Alan depuis l'interface le 22/09. Trois garde-fous ajoutés le même jour |

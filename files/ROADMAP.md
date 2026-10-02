@@ -78,5 +78,7 @@ Images (F9), modèles de posts récurrents, résumé hebdomadaire de la file.
   volume de publication justifiera d'arbitrer entre le coût par appel et la
   publication manuelle.
 - **Analytics** : demande une autorisation LinkedIn séparée.
-- **Multi-tenant** : réécriture du cœur pour DEAL, pas un portage. `linkedin.py`
-  doit rester importable sans rien traîner derrière lui.
+- ~~**Multi-tenant**~~ : n'est plus reporté. Décidé le 02/10/2026, PostAgent
+  devient un produit vendable de Sentinelle Services. Étapes P0 à P7 dans
+  `PRODUIT.md`. `linkedin.py` doit rester importable sans rien traîner
+  derrière lui.

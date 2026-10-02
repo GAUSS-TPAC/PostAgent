@@ -46,6 +46,19 @@ _LITTLE_RESERVED = re.compile(r"([\\|{}@\[\]()<>*_~])")
 # à 3 000. Vérifié sur Microsoft Learn le 21/09/2026.
 MAX_COMMENTARY = 3000
 
+# Verrou de répétition. Quand POSTAGENT_DRY_RUN vaut 1, publish() refuse juste
+# avant l'appel réseau : la validation est exercée, rien n'atteint LinkedIn.
+#
+# Raison d'être, constatée le 23/09/2026 : un test censé prouver qu'une
+# publication échoue a publié pour de vrai, parce que le token qu'il croyait
+# avoir corrompu était encore accepté. Une règle de prudence ne suffit pas —
+# il faut un interrupteur que le test pose lui-même.
+DRY_RUN_ENV = "POSTAGENT_DRY_RUN"
+
+
+class DryRunRefused(RuntimeError):
+    """publish() appelé alors que le verrou de répétition est posé."""
+
 
 class LinkedInError(RuntimeError):
     """Réponse inattendue de l'API. Porte le code HTTP et le corps brut."""
@@ -124,6 +137,16 @@ def publish(text, visibility):
         if length != raw:
             detail += f" après échappement ({raw} avant)"
         raise ValueError(f"Texte trop long : {detail}, maximum {MAX_COMMENTARY}")
+
+    # Dernier point d'arrêt avant le réseau. Placé ici et non en tête de
+    # fonction : les contrôles de texte et de visibilité doivent rester
+    # testables, seule la publication est interdite.
+    if os.getenv(DRY_RUN_ENV) == "1":
+        raise DryRunRefused(
+            f"{DRY_RUN_ENV}=1 : publication refusée avant tout appel réseau. "
+            f"Texte de {utf16_length(commentary)} unités, visibilité {visibility}. "
+            "Retire la variable d'environnement pour publier réellement."
+        )
 
     token, urn = _credentials()
     response = requests.post(
