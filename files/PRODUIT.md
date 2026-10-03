@@ -1,25 +1,72 @@
 # PRODUIT.md
 
 Décision du 02/10/2026 : **PostAgent devient un produit vendable de Sentinelle
-Services.** Alan reste l'utilisateur principal, mais en tant que premier
-client, pas comme un cas à part. Ce document fixe ce qui change, ce qui ne
-change pas, et l'ordre des travaux.
+Services.** Révisée le 04/10/2026, après lecture des API Terms of Use (P0) :
+**on ne vend pas un service qui publie, on vend le logiciel et sa mise en
+place.** Chaque client fait tourner sa propre instance, avec sa propre app
+LinkedIn, enregistrée à son nom. Alan en est le premier client : son
+instance est celle de ce dépôt.
+
+Ce document fixe ce qui est vendu, ce qui ne l'est jamais, ce qui change et
+l'ordre des travaux.
+
+## La forme : auto-hébergée
+
+| | Service hébergé (abandonné le 04/10) | Logiciel auto-hébergé (retenu) |
+|---|---|---|
+| App LinkedIn | une seule, celle de Sentinelle | une par client, à son nom |
+| Jeton d'accès LinkedIn | — | reste chez le client, dans ses propres secrets |
+| Qui publie | Sentinelle, au nom du client | le client, par son instance |
+| Contenu des posts | — | dans le dépôt du client |
+| Ce que Sentinelle détient | — | **rien** : ni jeton, ni contenu, ni accès à l'instance |
+
+Précédent retenu par Alan : Postiz, même catégorie, même modèle (non
+revérifié par la boucle du 04/10).
+
+### Ce qui est vendu
+
+- **le logiciel** : ce dépôt, rendu installable ;
+- **l'installation** : accompagner le client jusqu'à son premier post
+  programmé ;
+- **l'accompagnement** : renouvellement, mises à jour, dépannage ;
+- **les gabarits** : modèles de posts, guide d'usage (`GUIDE.md`).
+
+### Ce qui n'est jamais vendu
+
+- **L'accès à l'API LinkedIn** (§8.2 : « You may not charge your Users
+  incremental fees for access to our Content or APIs »). Aucun prix au post,
+  à l'appel ou au volume publié. Le prix porte sur le logiciel et le temps
+  passé.
+- Une garantie de publication : LinkedIn peut couper l'accès d'une app à
+  tout moment, sans motif (§11.3). Le client doit le lire avant d'acheter.
+
+### Ce que le client enregistre lui-même
+
+| Élément | Où | Pourquoi lui |
+|---|---|---|
+| App LinkedIn (« Share on LinkedIn », « Sign In with LinkedIn ») | portail développeur LinkedIn, sous son compte | c'est lui qui accepte les API Terms of Use, pour son propre usage |
+| Identifiants de l'app et jeton d'accès | ses propres secrets (aujourd'hui : `.env` local et secrets de son dépôt GitHub) | Sentinelle ne doit jamais les voir |
+| Dépôt de la file | son compte GitHub | son contenu lui appartient |
+| Horloge | son compte Cloudflare | un Worker par instance, aucun en commun |
+
+Règle d'installation qui en découle : **le client saisit lui-même chaque
+secret.** Un partage d'écran où le jeton apparaît, un secret dicté ou copié
+par Sentinelle, et le modèle ne tient plus.
 
 ## Ce qui change
 
 | Avant | Désormais |
 |---|---|
-| Outil personnel, un seul compte LinkedIn | Plusieurs clients, chacun son compte |
-| « Interface web : jamais » | Une interface web, pour ce que la conversation fait mal |
-| Utilisateur technique (terminal, git, GPG) | Utilisateur non technique : aucun terminal, jamais |
-| Coût nul (NF1) | Coût **marginal** quasi nul par client ; un socle payant modeste est accepté |
+| Outil personnel d'Alan | Le même outil, installé chez chaque client |
+| « Interface web : jamais » | Une interface par instance, pour ce que la conversation fait mal |
+| Utilisateur technique (terminal, git, GPG) | Utilisateur non technique **après** l'installation ; l'installation est accompagnée |
+| Coût nul (NF1) | Coût d'exploitation nul pour Sentinelle ; chaque client porte le sien, quasi nul |
 
 ### Ce que l'interface fait, et ne fait pas
 
 La conversation reste le cœur du produit et ce qui le distingue. L'interface
 couvre seulement ce qu'une conversation fait mal :
 
-- **se connecter** : « Se connecter avec LinkedIn », un clic ;
 - **voir** : calendrier des posts programmés, publiés et en échec ;
 - **trancher** : un post bloqué ou périmé apparaît avec une question claire
   et deux boutons, au lieu d'un fichier à déplacer dans git ;
@@ -29,14 +76,15 @@ couvre seulement ce qu'une conversation fait mal :
 
 ## Ce qui ne change pas
 
-Les règles de `CLAUDE.md` valent pour chaque client, et pèsent plus lourd :
+Les règles de `CLAUDE.md` valent pour chaque instance, et pèsent plus lourd :
 un incident touche désormais le profil de quelqu'un d'autre.
 
 - API officielle uniquement.
 - **Visibilité toujours explicite**, y compris dans l'interface : pas de
   case présélectionnée.
 - Un post ne part jamais deux fois ; chaque `post_id` est conservé.
-- Échec visible, pour le client **et** pour Sentinelle.
+- Échec visible, pour le client — et pour Sentinelle seulement s'il a
+  choisi de l'en avertir.
 - Le cœur LinkedIn reste isolé de l'orchestration (NF8).
 
 ## Faits LinkedIn qui conditionnent la vente
@@ -44,156 +92,115 @@ un incident touche désormais le profil de quelqu'un d'autre.
 Vérifiés sur Microsoft Learn le 02/10/2026.
 
 - **Share on LinkedIn est une permission ouverte** : n'importe quel membre
-  peut autoriser l'app, sans approbation partenaire. Le modèle multi-clients
-  est donc possible sur l'app actuelle.
+  peut créer une app et l'obtenir, sans approbation partenaire. C'est ce qui
+  rend possible une app par client.
 - **Quotas** : 150 requêtes par membre et par jour, 100 000 par application.
-  Le quota d'application ne sera pas un frein avant longtemps.
-- **Pas de refresh token** : réservés aux partenaires approuvés du Marketing
-  Developer Platform. Chaque client devra se reconnecter tous les 60 jours.
-  Atténuation documentée : si le client relance l'autorisation **avant**
-  l'expiration et qu'il est connecté à LinkedIn, l'écran d'autorisation est
-  sauté — un clic suffit. D'où le bouton « Renouveler » envoyé à J−7, jamais
-  après l'échéance.
+  Chaque client a les siens.
+- **Pas de refresh token** : réservés aux partenaires approuvés. Chaque
+  client refait l'autorisation tous les 60 jours. S'il la relance **avant**
+  l'expiration en étant connecté à LinkedIn, l'écran d'autorisation est
+  sauté. D'où l'alerte à J−7, jamais après l'échéance.
 - **Publier au nom d'une page entreprise** relève d'une autre API (Community
-  Management), soumise à approbation. Hors périmètre tant que la cible n'est
-  pas tranchée.
-- L'usage commercial est régi par les **LinkedIn API Terms of Use**. À lire
-  en entier avant la première vente : stockage des tokens, données
-  conservées, présentation de la marque LinkedIn.
+  Management), soumise à approbation. Hors périmètre.
 
 ## P0 — lecture des API Terms of Use
 
 Lues en entier le 04/10/2026 (version révisée le 13 décembre 2022,
-`linkedin.com/legal/l/api-terms-of-use`). **P0 n'est pas validée : trois
-clauses peuvent bloquer la vente sur l'app actuelle.** L'app `Post-Agent`
-relève du « Self-Serve API Program » ; ce sont ses conditions qui coincent,
-pas la technique — « possible sur l'app actuelle » plus haut ne vaut que
-pour la technique.
+`linkedin.com/legal/l/api-terms-of-use`). Trois clauses bloquaient la forme
+hébergée. La forme auto-hébergée en lève deux ; **la troisième reste
+ouverte, et un point nouveau apparaît.**
 
-| Clause | Texte | Portée |
+| Clause | Texte | Forme auto-hébergée |
 |---|---|---|
-| §3.1, dernier point | interdit de « use the Content or the APIs to automate posting on the LinkedIn Services » | touche le cœur du produit. Reste à savoir si publier à l'heure choisie un texte écrit et validé par le membre est « automatiser » : le texte ne le dit pas. Concerne aussi l'instance d'Alan. |
-| §1.4, critère 5 | le Self-Serve exige que l'application « DOES NOT rely on access to the APIs as a fundamental aspect of your business » | un produit vendu dont la seule fonction est de publier sur LinkedIn en dépend, par construction |
-| §8.2 | « You may not charge your Users incremental fees for access to our Content or APIs » | à lire avant de fixer un prix (P7) : facturer le service, pas l'accès |
+| §1.4, critère 5 | le Self-Serve exige que l'application « DOES NOT rely on access to the APIs as a fundamental aspect of your business » | **levée** : Sentinelle n'exploite aucune app pour ses clients ; l'app de chaque client sert son propre profil, pas son activité |
+| §8.2 | « You may not charge your Users incremental fees for access to our Content or APIs » | **levée** si le prix ne dépend jamais du volume publié — voir « Ce qui n'est jamais vendu » |
+| §3.1, dernier point | interdit de « use the Content or the APIs to automate posting on the LinkedIn Services » | **non levée** : elle vise chaque app, celle du client comme celle d'Alan. Le texte ne dit pas si publier à l'heure choisie un texte écrit et validé par le membre est « automatiser ». Le risque est porté par celui qui enregistre l'app : il doit lui être dit par écrit avant la vente |
+| §2.2 (nouveau) | « do not require your Users to obtain their own Access Credentials to use your Application (for example, in an attempt to circumvent call limits) » | **à surveiller** : la clause vise un développeur qui fait porter ses clés par ses utilisateurs. Ici le client est le développeur de sa propre app et son seul utilisateur, et aucune limite n'est contournée. Lecture favorable, pas certitude |
 
-§1.4 renvoie, quand ses critères ne sont pas remplis, vers un « Vetted API
-Program » ou un « Partner Program ». Piste à vérifier : la Community
-Management API, réservée aux organisations légalement enregistrées, pour un
-usage commercial, avec page entreprise vérifiée — donc Sentinelle Services,
-et d'autres conditions (Marketing API Terms), à lire à leur tour.
+Obligations qui pèsent sur celui qui enregistre l'app, donc sur chaque
+client, pour ses propres données : conditions d'utilisation et politique de
+confidentialité (§5.1), sécurité et signalement d'incident sous 24 h
+(§7.1), marque LinkedIn limitée à l'intérieur de l'application (§6.1). Pour
+une app à utilisateur unique, elles sont légères ; le guide d'installation
+doit les nommer.
 
-Obligations non bloquantes, mais qui s'imposent à la conception :
+Pour Sentinelle : aucun support de vente ne montre la marque LinkedIn sans
+approbation préalable (§6.1), et rien ne laisse entendre un partenariat.
 
-- **§4.2** : les tokens OAuth et l'identifiant du membre peuvent être
-  stockés. **§4.3** : nom et photo, seulement avec consentement.
-- **§4.4** : suppression immédiate de tout, token compris, à la demande du
-  client ou à la fermeture de son compte.
-- **§5.1** : conditions d'utilisation et politique de confidentialité
-  propres, visibles là où le client accède au produit.
-- **§5.2** : consentement explicite avant la connexion LinkedIn (quelles
-  données, quand, comment retirer, comment supprimer), à **redemander à
-  chaque expiration du token** — le bouton « Renouveler » doit le porter.
-- **§7.1** : chiffrement en transit et au repos, procédure écrite de
-  réponse aux vulnérabilités, incident signalé à LinkedIn **sous 24 h**,
-  aucune déclaration publique sans leur accord.
-- **§6.1** : marque LinkedIn utilisable dans le produit seulement ; tout
-  support externe (site, publicité) qui la montre passe par une
-  approbation préalable.
-- **§11.3** : LinkedIn peut couper l'accès à tout moment, sans motif.
-- **§14.7** : pas de cession sans accord écrit. L'app est enregistrée au
-  nom d'Alan : son rattachement à Sentinelle Services est à faire
-  proprement, pas à supposer.
+L'app `Post-Agent` reste celle d'Alan, pour son instance. Aucun client ne
+s'y connecte : la question de son rattachement à la page Sentinelle
+Services ne se pose plus pour la vente.
 
 Ceci est une lecture, pas un avis juridique.
 
-## Ce qui ne passe pas à l'échelle
+## Ce que l'instance actuelle ne permet pas encore de vendre
 
-| Aujourd'hui | Problème avec des clients |
+| Aujourd'hui | Problème chez un client |
 |---|---|
-| File dans git, un dépôt | un dépôt par client est ingérable ; le contenu des clients ne doit pas vivre dans un dépôt |
-| Token dans un secret GitHub | un secret par client, posé à la main |
-| `auth.py` avec retour sur `localhost` | impossible pour un client : il faut une URL de retour publique |
-| Serveur MCP local (stdio) | le client n'a ni Python, ni dépôt |
-| GitHub Actions comme exécuteur | les jobs par client et le contenu des clients n'ont rien à faire dans la CI |
-| Commits signés GPG | sans objet hors du poste d'Alan |
+| Installation à la main, étalée sur trois semaines de notes | il faut une procédure rejouable, de zéro à un premier post programmé |
+| `auth.py` dans un terminal, tous les 60 jours | un non-technicien ne relancera pas un script ; le renouvellement est le point de rupture du modèle |
+| Décisions par déplacement de fichiers dans git | illisible hors du poste d'Alan : c'est le rôle de l'interface |
+| Serveur MCP local, lancé par Claude Code | le client n'a pas forcément Python, ni le même assistant |
+| Aucun canal de mise à jour | un correctif doit atteindre les instances installées sans que Sentinelle y ait accès |
+| Création de l'app LinkedIn non documentée | le portail demande de la rattacher à une page LinkedIn : à vérifier sur une vraie première installation |
 
-## Architecture cible recommandée
+Ce qui, à l'inverse, convient déjà : un dépôt par client, un secret par
+client, une horloge par client. Ce qui était un défaut de la forme hébergée
+est exactement la forme auto-hébergée.
 
-Tout sur **Cloudflare**, déjà utilisé pour l'horloge :
+## Socle technique
 
-```
-  Client (navigateur)     Client (assistant IA)
-         |                        |
-   Interface web            Serveur MCP distant (OAuth)
-         |                        |
-         +-----------+------------+
-                     |
-               Worker (API)  ── OAuth LinkedIn, callback public
-                     |
-          +----------+-----------+
-          |                      |
-   D1 (base SQL)          Durable Object par client
-   clients, posts,        alarme à l'heure exacte,
-   journal des post_id    verrou de publication
-                     |
-               cœur LinkedIn  ──►  API /rest/posts
-```
+Non tranché. Le plan du 02/10 portait le cœur en TypeScript sur Cloudflare
+pour servir plusieurs clients depuis une seule plateforme. Cette raison a
+disparu avec la forme hébergée ; reste à savoir si d'autres la remplacent.
+Instruit dans `DECISIONS.md`, à trancher en P1.
 
-Pourquoi ce choix :
+## Données et sécurité
 
-- **L'alarme d'un Durable Object remplace le cron, la fenêtre d'attente et
-  la péremption « par sondage ».** Elle réveille le client à l'heure du post,
-  et l'état de l'objet est transactionnel : c'est le verrou `publishing/`,
-  mais fiable entre exécutions concurrentes. Le problème le plus dur du
-  projet (NF5) devient plus simple, pas plus compliqué.
-- **Le serveur MCP distant garde la conversation** : le client ajoute
-  PostAgent comme connecteur dans son assistant, sans rien installer.
-- Pas de serveur à administrer, facturation à l'usage, et un seul fournisseur
-  de plus que LinkedIn.
+- Sentinelle ne détient aucun jeton d'accès, aucun identifiant d'app, aucun
+  texte de post d'un client. Il n'y a donc ni base, ni chiffrement, ni
+  suppression sur demande à organiser de son côté.
+- Le client garde tout dans ses propres comptes ; arrêter le produit, c'est
+  supprimer son dépôt et révoquer son app.
+- Aucun texte de post dans les journaux techniques de l'instance.
+- Si le client demande une aide à distance, elle passe par ce qu'il montre,
+  jamais par un accès donné à Sentinelle.
 
-### Le compromis à trancher : le langage du cœur
+## Questions ouvertes, à trancher par Alan
 
-Les Workers exécutent du JavaScript/TypeScript. `linkedin.py` devrait donc
-être **porté en TypeScript** (~250 lignes, mais chaque règle est documentée et
-testée : échappement, comptage UTF-16, 404 sur suppression). L'alternative,
-garder Python sur un autre hébergeur, réintroduit un serveur à maintenir.
-Recommandation : porter, et garder la version Python pour l'instance d'Alan
-jusqu'à sa migration.
-
-### Données et sécurité
-
-- Tokens LinkedIn **chiffrés** en base, clé hors base (secret du Worker).
-- Aucun texte de post dans les journaux techniques.
-- Suppression complète d'un client sur demande : tokens, posts, journal.
-- Conformité à la loi de protection des données applicable aux clients visés
-  — à vérifier avant la première vente.
+1. **§3.1** : le risque « automate posting » est-il acceptable, et sous
+   quelle formulation est-il annoncé au client ?
+2. **Cible** : particuliers et indépendants (profil personnel, possible
+   aujourd'hui). Les pages entreprise restent hors périmètre.
+3. **Rédaction** : le client apporte son propre assistant (connecteur MCP),
+   ou l'installation inclut une rédaction IA à ses frais ?
+4. **Prix** : forfait d'installation, abonnement d'accompagnement, ou les
+   deux — jamais indexé sur le volume publié.
+5. **Marque** : PostAgent seul, ou « PostAgent par Sentinelle Services »
+   partout ?
+6. **Licence du logiciel** : ce que le client a le droit de faire du code
+   une fois installé chez lui.
 
 ## Étapes
 
 Même règle qu'au `ROADMAP.md` : une étape n'est close que validée en
 conditions réelles.
 
+L'ancienne découpe (cœur porté en TypeScript, connexion multi-clients,
+Durable Objects, migration d'Alan) est abandonnée avec la forme hébergée.
+
+### Découpe proposée le 04/10/2026 — non commencée, à valider par Alan
+
 | Étape | Contenu | Validation |
 |---|---|---|
-| P0 | Lire les API Terms of Use ; rattacher l'app LinkedIn à la page Sentinelle Services | aucune clause bloquante identifiée, notée ici — **lu le 04/10/2026, trois clauses à lever, voir plus haut** |
-| P1 | Cœur porté en TypeScript, testé avec un verrou `DRY_RUN` équivalent | phases B et C de `TESTING.md` rejouées, aucune publication |
-| P2 | Connexion LinkedIn multi-clients, tokens chiffrés en base | deux comptes connectés, `me()` correct pour chacun |
-| P3 | Programmation par Durable Object + journal en D1 | phase E rejouée, dont E.4/E.5 (idempotence) |
-| P4 | Interface : calendrier, décisions, renouvellement | un non-technicien programme et annule un post sans aide |
-| P5 | Serveur MCP distant | programmer depuis un assistant, sans rien installer |
-| P6 | Migration d'Alan, arrêt de la file git | ses posts partent par la nouvelle chaîne une semaine sans incident |
-| P7 | Facturation | premier client payant |
+| P0 | Lecture des API Terms of Use | faite ; reste à décider si §3.1 est un risque acceptable, pour Alan et pour un client |
+| P1 | Trancher le socle : garder Python + GitHub Actions + Worker d'horloge, ou porter | décision écrite ici, avec sa raison |
+| P2 | Installation rejouable, sans secret chez Sentinelle : de comptes vides à un post programmé, app LinkedIn créée par le client | une seconde instance installée sur des comptes qui ne sont pas ceux d'Alan, sans que Sentinelle ait vu un seul secret |
+| P3 | Renouvellement sans terminal : le client refait l'autorisation LinkedIn seul, depuis l'alerte à J−7 | un non-technicien renouvelle son accès sans aide |
+| P4 | Interface de l'instance : calendrier, décisions, renouvellement | un non-technicien programme et annule un post sans aide |
+| P5 | Assistant : serveur MCP utilisable depuis l'assistant du client | programmer un post depuis un assistant sur un poste qui n'est pas celui d'Alan |
+| P6 | Mises à jour et support : un correctif atteint les instances installées ; un échec est visible du client | un correctif propagé à deux instances sans accès de Sentinelle |
+| P7 | Offre et première vente : prix, contrat, avertissement écrit sur §3.1 et §11.3 | premier client payant |
 
-Le système actuel reste en service jusqu'à P6. Rien ne l'arrête avant que
-la relève soit prouvée.
-
-## Questions ouvertes, à trancher par Alan
-
-1. **Cible** : particuliers et indépendants (profil personnel, possible
-   aujourd'hui) ou entreprises (pages, approbation LinkedIn nécessaire) ?
-2. **Rédaction** : le client apporte son propre assistant (connecteur MCP),
-   ou PostAgent inclut la rédaction IA (coût par client à intégrer au prix) ?
-3. **Prix et facturation** : abonnement, palier gratuit, moyen de paiement
-   adapté au marché visé.
-4. **Marque** : PostAgent seul, ou « PostAgent par Sentinelle Services »
-   partout ?
+L'instance d'Alan reste en service telle quelle pendant tout le chantier :
+elle est la première installation, pas un système à remplacer.

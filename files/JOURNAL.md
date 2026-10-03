@@ -142,3 +142,46 @@ Appris    : (1) le critère « plus aucune référence à `/trigger` » ne peut
             pas — conforme à la consigne de lancement (« ce qui me revient
             va dans DECISIONS.md, et tu passes à l'item suivant »).
 Reste     : les trois décisions d'Alan.
+
+## 2026-10-04T01:22 — 4. Réécrire PRODUIT.md — forme auto-hébergée
+
+Fait      : `files/PRODUIT.md` réécrit en entier. Forme hébergée retirée
+            (schéma Cloudflare multi-clients, base de jetons, ancienne
+            découpe). Ajouts : tableau hébergé / auto-hébergé, ce qui est
+            vendu, ce qui n'est jamais vendu (§8.2), ce que le client
+            enregistre lui-même, règle « le client saisit lui-même chaque
+            secret », section P0 relue sous la nouvelle forme, découpe
+            P1–P7 proposée en fin de fichier.
+Preuve    : `grep -n -i -E "chiffr|en base|stock|\bD1\b|Durable|token|jeton" files/PRODUIT.md`
+
+```
+18:| Jeton d'accès LinkedIn | — | reste chez le client, dans ses propres secrets |
+21:| Ce que Sentinelle détient | — | **rien** : ni jeton, ni contenu, ni accès à l'instance |
+48:| Identifiants de l'app et jeton d'accès | ses propres secrets (aujourd'hui : `.env` local et secrets de son dépôt GitHub) | Sentinelle ne doit
+53:secret.** Un partage d'écran où le jeton apparaît, un secret dicté ou copié
+99:- **Pas de refresh token** : réservés aux partenaires approuvés. Chaque
+160:- Sentinelle ne détient aucun jeton d'accès, aucun identifiant d'app, aucun
+161:  texte de post d'un client. Il n'y a donc ni base, ni chiffrement, ni
+190:Durable Objects, migration d'Alan) est abandonnée avec la forme hébergée.
+```
+Huit lignes, lues une à une : toutes disent que le jeton reste chez le
+client ou que Sentinelle n'en détient pas. Aucune ne décrit un stockage de
+jeton client. `grep -n -E "^## |^### " files/PRODUIT.md | tail -2` :
+```
+184:## Étapes
+192:### Découpe proposée le 04/10/2026 — non commencée, à valider par Alan
+```
+Rien de P1–P7 n'est commencé : aucun fichier de code touché par cet item.
+
+Appris    : (1) la forme auto-hébergée lève §1.4 et §8.2, **pas §3.1**
+            (« automate posting ») : elle vise chaque app, celle d'Alan
+            comprise. Écrit tel quel dans `PRODUIT.md`. (2) Point nouveau,
+            §2.2 : interdiction de faire porter ses clés par ses
+            utilisateurs ; lecture favorable ici, à surveiller. (3) « un
+            dépôt par client, un secret par client » était le défaut de la
+            forme hébergée ; c'est la définition de la forme auto-hébergée.
+            L'instance actuelle est donc la première installation.
+Reste     : la mention « Postiz » est reprise du backlog sans vérification.
+            `CLAUDE.md:152` et `ROADMAP.md:83` parlent encore de
+            « multi-clients » et de « multi-tenant » : non modifiés, hors
+            de l'item — à aligner par Alan ou par un item dédié.

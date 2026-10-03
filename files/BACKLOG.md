@@ -57,7 +57,9 @@ fichier `stale/` est supprimé, et le secret Worker est consigné dans
 
 ---
 
-## 4. Réécrire PRODUIT.md — forme auto-hébergée — à faire
+## 4. Réécrire PRODUIT.md — forme auto-hébergée — fini
+
+Réécrit le 04/10/2026 ; la découpe P1–P7 est une proposition, à valider.
 
 Décision d'Alan du 04/10 : on ne vend pas un service qui publie, on vend
 le logiciel et sa mise en place. Chaque client enregistre **sa propre**
