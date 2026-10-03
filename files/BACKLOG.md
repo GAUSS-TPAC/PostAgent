@@ -81,7 +81,9 @@ fichier, non commencée.
 
 ---
 
-## 5. Marketing API Terms — pour archive — à faire
+## 5. Marketing API Terms — pour archive — fini
+
+Note du 04/10/2026 dans la section P0 de `PRODUIT.md`.
 
 Vingt minutes, rien n'en dépend. Lire et consigner dans la section P0 de
 `PRODUIT.md` si les conditions du programme Partner lèvent §1.4 et §3.1.

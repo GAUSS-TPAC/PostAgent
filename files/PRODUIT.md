@@ -131,6 +131,41 @@ L'app `Post-Agent` reste celle d'Alan, pour son instance. Aucun client ne
 s'y connecte : la question de son rattachement à la page Sentinelle
 Services ne se pose plus pour la vente.
 
+### Note du 04/10/2026 — Marketing API Terms, pour archive
+
+Lu en entier : « Additional Terms for the LinkedIn Marketing API Program »
+(`linkedin.com/legal/l/marketing-api-terms`), version « Last revised on
+July 25, 2025 ». Rien n'en dépend depuis le passage à la forme
+auto-hébergée ; consigné pour ne pas avoir à le relire.
+
+C'est un « Vetted API Program », pas le « Partner Program » : ce dernier
+est un contrat signé séparé (API Terms §1.2), dont le texte n'est pas
+public. La question du backlog ne peut donc recevoir de réponse que pour
+le programme Vetted.
+
+- **§1.4 des API Terms : levée.** Ses critères sont ceux du Self-Serve. Le
+  programme Marketing est fait pour des applications qui fournissent des
+  services à des clients sous contrat (LMA §1.2), dont la gestion de
+  profils de membres pour leur compte (LMA §1.6, « Member Profile
+  Management »). Dépendre de l'API y est le cas prévu.
+- **§3.1 « automate posting » : pas levée par le texte.** Les LMA Terms ne
+  l'emportent sur les API Terms qu'en cas de conflit (LMA §1.3), et aucune
+  de leurs clauses ne parle de publication automatique ou programmée.
+  « Manage Member Profiles » ne dit pas si programmer un post en fait
+  partie. Seule la revue de LinkedIn trancherait : le cas d'usage est
+  déclaré à la demande d'accès et aucun autre n'est permis (LMA §2.1).
+- **Facturer** : prévu. LMA §5.1 admet des « markup fees » sur les
+  services, à condition qu'ils restent distincts des coûts LinkedIn.
+
+Ce que ce programme coûterait, s'il fallait un jour y revenir : revue de
+l'application et des pratiques de sécurité, sans délai garanti (§2.1) ;
+audit possible à tout moment (§2.3) ; interdiction de mettre l'application
+à disposition d'un autre développeur qui la proposerait à ses propres
+clients (§3.2.b) ; interdiction de servir des clients depuis ses propres
+comptes (§3.2.k) ; données de membres ni exportées ni conservées au-delà
+des durées de la documentation (§3.1.e, §4.1) ; résiliation par l'une ou
+l'autre partie sous 30 jours, sans motif (§6.2).
+
 Ceci est une lecture, pas un avis juridique.
 
 ## Ce que l'instance actuelle ne permet pas encore de vendre

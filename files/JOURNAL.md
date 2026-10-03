@@ -185,3 +185,32 @@ Reste     : la mention « Postiz » est reprise du backlog sans vérification.
             `CLAUDE.md:152` et `ROADMAP.md:83` parlent encore de
             « multi-clients » et de « multi-tenant » : non modifiés, hors
             de l'item — à aligner par Alan ou par un item dédié.
+
+## 2026-10-04T01:38 — 5. Marketing API Terms — pour archive
+
+Fait      : texte téléchargé et lu en entier (132 lignes, 39 805
+            caractères une fois le HTML retiré). Note datée ajoutée à la
+            section P0 de `files/PRODUIT.md`, avec la version lue.
+            Réponse : le programme lève §1.4, **pas §3.1** — aucun passage
+            ne traite de publication automatique ou programmée.
+Preuve    : sur le texte téléchargé (`mkt.txt`, hors dépôt) puis sur le dépôt :
+
+```
+$ grep -n -o -E "Last revised on [A-Za-z]+ [0-9]+, [0-9]{4}" mkt.txt
+6:Last revised on July 25, 2025
+$ grep -n -o -i -E ".{90}(automat|schedul).{90}" mkt.txt
+72:ective talent for hire, for lead creation, to enhance customer data in a CRM or marketing automation platform, to build an audience list, or for ad targeting purposes); (6) use Member Dat
+108:(“Termination for Convenience”). For clarity, any termination of these LMA Terms will not automatically terminate the API Terms of Use but any termination of the API Terms of Use will aut
+$ grep -n -E "Note du 04/10/2026|Last revised on" files/PRODUIT.md
+134:### Note du 04/10/2026 — Marketing API Terms, pour archive
+137:(`linkedin.com/legal/l/marketing-api-terms`), version « Last revised on
+```
+Les deux seules occurrences d'« automat » sont « marketing automation
+platform » et « automatically terminate » : rien sur la publication.
+
+Appris    : le backlog parle du « programme Partner » ; le document public
+            est celui du programme **Vetted** (Marketing API). Le Partner
+            Program est un contrat signé à part, non publié : sa réponse à
+            §3.1 ne peut pas être lue, seulement demandée à LinkedIn.
+Reste     : rien. La levée de §1.4 est une déduction (ses critères sont
+            ceux du Self-Serve), pas une phrase du texte.
