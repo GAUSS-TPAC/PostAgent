@@ -61,6 +61,51 @@ Vérifiés sur Microsoft Learn le 02/10/2026.
   en entier avant la première vente : stockage des tokens, données
   conservées, présentation de la marque LinkedIn.
 
+## P0 — lecture des API Terms of Use
+
+Lues en entier le 04/10/2026 (version révisée le 13 décembre 2022,
+`linkedin.com/legal/l/api-terms-of-use`). **P0 n'est pas validée : trois
+clauses peuvent bloquer la vente sur l'app actuelle.** L'app `Post-Agent`
+relève du « Self-Serve API Program » ; ce sont ses conditions qui coincent,
+pas la technique — « possible sur l'app actuelle » plus haut ne vaut que
+pour la technique.
+
+| Clause | Texte | Portée |
+|---|---|---|
+| §3.1, dernier point | interdit de « use the Content or the APIs to automate posting on the LinkedIn Services » | touche le cœur du produit. Reste à savoir si publier à l'heure choisie un texte écrit et validé par le membre est « automatiser » : le texte ne le dit pas. Concerne aussi l'instance d'Alan. |
+| §1.4, critère 5 | le Self-Serve exige que l'application « DOES NOT rely on access to the APIs as a fundamental aspect of your business » | un produit vendu dont la seule fonction est de publier sur LinkedIn en dépend, par construction |
+| §8.2 | « You may not charge your Users incremental fees for access to our Content or APIs » | à lire avant de fixer un prix (P7) : facturer le service, pas l'accès |
+
+§1.4 renvoie, quand ses critères ne sont pas remplis, vers un « Vetted API
+Program » ou un « Partner Program ». Piste à vérifier : la Community
+Management API, réservée aux organisations légalement enregistrées, pour un
+usage commercial, avec page entreprise vérifiée — donc Sentinelle Services,
+et d'autres conditions (Marketing API Terms), à lire à leur tour.
+
+Obligations non bloquantes, mais qui s'imposent à la conception :
+
+- **§4.2** : les tokens OAuth et l'identifiant du membre peuvent être
+  stockés. **§4.3** : nom et photo, seulement avec consentement.
+- **§4.4** : suppression immédiate de tout, token compris, à la demande du
+  client ou à la fermeture de son compte.
+- **§5.1** : conditions d'utilisation et politique de confidentialité
+  propres, visibles là où le client accède au produit.
+- **§5.2** : consentement explicite avant la connexion LinkedIn (quelles
+  données, quand, comment retirer, comment supprimer), à **redemander à
+  chaque expiration du token** — le bouton « Renouveler » doit le porter.
+- **§7.1** : chiffrement en transit et au repos, procédure écrite de
+  réponse aux vulnérabilités, incident signalé à LinkedIn **sous 24 h**,
+  aucune déclaration publique sans leur accord.
+- **§6.1** : marque LinkedIn utilisable dans le produit seulement ; tout
+  support externe (site, publicité) qui la montre passe par une
+  approbation préalable.
+- **§11.3** : LinkedIn peut couper l'accès à tout moment, sans motif.
+- **§14.7** : pas de cession sans accord écrit. L'app est enregistrée au
+  nom d'Alan : son rattachement à Sentinelle Services est à faire
+  proprement, pas à supposer.
+
+Ceci est une lecture, pas un avis juridique.
+
 ## Ce qui ne passe pas à l'échelle
 
 | Aujourd'hui | Problème avec des clients |
@@ -130,7 +175,7 @@ conditions réelles.
 
 | Étape | Contenu | Validation |
 |---|---|---|
-| P0 | Lire les API Terms of Use ; rattacher l'app LinkedIn à la page Sentinelle Services | aucune clause bloquante identifiée, notée ici |
+| P0 | Lire les API Terms of Use ; rattacher l'app LinkedIn à la page Sentinelle Services | aucune clause bloquante identifiée, notée ici — **lu le 04/10/2026, trois clauses à lever, voir plus haut** |
 | P1 | Cœur porté en TypeScript, testé avec un verrou `DRY_RUN` équivalent | phases B et C de `TESTING.md` rejouées, aucune publication |
 | P2 | Connexion LinkedIn multi-clients, tokens chiffrés en base | deux comptes connectés, `me()` correct pour chacun |
 | P3 | Programmation par Durable Object + journal en D1 | phase E rejouée, dont E.4/E.5 (idempotence) |
