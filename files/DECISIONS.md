@@ -55,3 +55,41 @@ Options   : (a) laisser tel quel : la trace nue ne ment pas.
 Recommandé: (b), avec toi : le texte du second message engage ce que tu
             feras devant un doute de doublon.
 Bloque    : rien.
+
+## 2026-10-04 — Supprimer `stale/2026-09-16T1523.json` ?
+
+Contexte  : déchet du test de péremption du 18/09 (commit `89b952a`). Le
+            backlog demande sa suppression ; `LOOP.md` §1 interdit à la
+            boucle de supprimer quoi que ce soit dans `stale/`.
+Options   : (a) `git rm stale/2026-09-16T1523.json` par toi ; `git show
+            89b952a` en garde le contenu. (b) le laisser : `list_queue` le
+            signalera à chaque appel comme un post périmé à arbitrer.
+Recommandé: (a). Attention, `TESTING.md` ligne 243 le cite encore comme
+            jeu de test d'E.13 (sous son ancien chemin `queue/`) : à
+            corriger dans le même commit.
+Bloque    : item 3.
+
+## 2026-10-04 — Secret Worker `TRIGGER_KEY` à supprimer
+
+Contexte  : sans effet depuis le retrait de `/trigger` le 22/09, mais
+            toujours déposé côté Cloudflare d'après le backlog. La boucle
+            ne lit ni ne modifie aucun secret : présence non vérifiée.
+Options   : `cd clock && npx wrangler secret delete TRIGGER_KEY`, puis
+            `npx wrangler secret list` pour constater qu'il ne reste que
+            `DISPATCH_TOKEN`.
+Recommandé: le supprimer : un secret sans usage reste un secret à faire
+            fuiter.
+Bloque    : item 3.
+
+## 2026-10-04 — Garder la mention historique de `/trigger` dans `clock/README.md` ?
+
+Contexte  : c'est la dernière référence du dépôt (ligne 122). Ce n'est pas
+            une instruction : elle raconte pourquoi le Worker n'a plus
+            d'URL. Le critère du backlog demande pourtant zéro référence.
+Options   : (a) la garder : elle justifie `workers_dev = false`.
+            (b) la reformuler sans nommer l'endpoint. Dans les deux cas,
+            un commit sous `clock/**` fusionné sur `main` redéploie le
+            Worker : à grouper avec un vrai changement de l'horloge.
+Recommandé: (a), et assouplir le critère du backlog en « aucune
+            instruction ne décrit `/trigger` ».
+Bloque    : item 3.

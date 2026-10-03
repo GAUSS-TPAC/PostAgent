@@ -37,7 +37,12 @@ tout appel réseau.
 
 ---
 
-## 3. Nettoyages en attente — à faire
+## 3. Nettoyages en attente — bloqué
+
+Instruit le 04/10/2026. Aucune instruction ne décrit plus `/trigger`. Les
+trois gestes restants reviennent à Alan (suppression dans `stale/` et secret
+Worker interdits à la boucle, mention historique dans `clock/`) : voir
+`DECISIONS.md`.
 
 - `stale/2026-09-16T1523.json` : déchet du test de péremption du 18/09.
 - Secret `TRIGGER_KEY` encore présent côté Worker (sans effet depuis le

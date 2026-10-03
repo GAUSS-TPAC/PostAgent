@@ -108,3 +108,37 @@ Appris    : (1) sous `DRY_RUN`, `publish()` refuse avant `_credentials()` :
 Reste     : non vérifié sur le vrai `token.json` (interdit à la boucle) et
             coupure réseau pendant le POST non jouée — deux entrées dans
             `DECISIONS.md`.
+
+## 2026-10-04T01:06 — 3. Nettoyages en attente
+
+Fait      : aucun fichier de code ni de doc modifié. Item passé `bloqué`,
+            trois entrées dans `DECISIONS.md`.
+            - `/trigger` : aucune instruction ne le décrit encore, ni dans
+              `README.md`, ni dans `CLAUDE.md`. Il reste une seule mention,
+              historique, dans `clock/README.md:122` (« Une première version
+              exposait… Il a été retiré »). Non retirée : elle explique
+              `workers_dev = false`, et toute modification sous `clock/**`
+              redéploie le Worker à la fusion sur `main`
+              (`deploy-clock.yml`), ce qui est interdit à la boucle.
+            - `stale/2026-09-16T1523.json` : non supprimé, `LOOP.md` §1
+              l'interdit sans exception.
+            - secret Worker `TRIGGER_KEY` : consigné, non touché.
+Preuve    : `git grep -n -i -E "/trigger|TRIGGER_KEY" -- . ':!clock/package-lock.json'`
+
+```
+clock/README.md:122:Une première version exposait un endpoint `/trigger` protégé par une clé
+files/BACKLOG.md:43:- Secret `TRIGGER_KEY` encore présent côté Worker (sans effet depuis le
+files/BACKLOG.md:47:  encore l'endpoint `/trigger`, supprimé le 22/09.
+files/BACKLOG.md:49:**Fini quand** : le dépôt ne contient plus de référence à `/trigger`, le
+```
+`ls stale` → `2026-09-16T1523.json`, `.gitkeep` (fichier toujours là).
+Présence du secret `TRIGGER_KEY` côté Cloudflare : non vérifiée, la boucle
+ne lit pas les secrets.
+
+Appris    : (1) le critère « plus aucune référence à `/trigger` » ne peut
+            pas être atteint à la lettre tant que `BACKLOG.md` le cite.
+            (2) Lecture retenue de `LOOP.md` §6 : un geste interdit bloque
+            l'item, pas la boucle, tant que d'autres items n'en dépendent
+            pas — conforme à la consigne de lancement (« ce qui me revient
+            va dans DECISIONS.md, et tu passes à l'item suivant »).
+Reste     : les trois décisions d'Alan.
