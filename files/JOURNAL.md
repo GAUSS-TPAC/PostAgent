@@ -214,3 +214,39 @@ Appris    : le backlog parle du « programme Partner » ; le document public
             §3.1 ne peut pas être lue, seulement demandée à LinkedIn.
 Reste     : rien. La levée de §1.4 est une déduction (ses critères sont
             ceux du Self-Serve), pas une phrase du texte.
+
+## 2026-10-04T01:50 — 6. Question ouverte à instruire
+
+Fait      : analyse et recommandation écrites dans `files/DECISIONS.md`
+            (« Le portage TypeScript / Cloudflare (P1) garde-t-il un sens
+            sans jetons hébergés ? »). Recommandation : ne pas porter le
+            cœur ; décider à l'étape P3 s'il faut une adresse publique chez
+            le client, et n'ajouter alors que cela. Rien de codé.
+Preuve    : `grep -n -E "^## " files/DECISIONS.md | cut -c1-110`
+
+```
+5:## 2026-10-04 — Poser `POSTAGENT_DRY_RUN=1` d'office dans les sessions de boucle ?
+28:## 2026-10-04 — Vérifier le nouveau contrôle d'expiration sur le vrai token
+42:## 2026-10-04 — Réseau coupé pendant le POST : quel message ?
+59:## 2026-10-04 — Supprimer `stale/2026-09-16T1523.json` ?
+72:## 2026-10-04 — Secret Worker `TRIGGER_KEY` à supprimer
+84:## 2026-10-04 — Garder la mention historique de `/trigger` dans `clock/README.md` ?
+97:## 2026-10-04 — Le portage TypeScript / Cloudflare (P1) garde-t-il un sens sans jetons hébergés ?
+```
+Aucun code touché par cet item : `git diff --stat -- '*.py' clock` vide.
+Non-régression : `tests/garde_fou.py` → `GARDE-FOU OK`.
+
+Appris    : ce qui reste en faveur de Cloudflare ne concerne pas le cœur
+            mais deux étapes précises (P3, renouvellement sans terminal ;
+            P5, assistant sans installation), parce que la forme actuelle
+            n'a aucune adresse publique.
+Reste     : rien.
+
+## 2026-10-04T01:52 — Arrêt de la boucle
+
+Condition : `LOOP.md` §6, « le backlog n'a plus d'item non bloqué ».
+État      : items 1, 2, 4, 5, 6 finis ; item 3 bloqué sur trois décisions.
+            Sept entrées dans `DECISIONS.md`. Branche
+            `chantier/boucle-autonome` poussée, `main` intacte. Aucune
+            publication, aucun fichier poussé dans `queue/`, aucun secret
+            modifié, Worker non déployé.

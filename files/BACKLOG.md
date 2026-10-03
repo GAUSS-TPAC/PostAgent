@@ -93,7 +93,9 @@ document lue.
 
 ---
 
-## 6. Question ouverte à instruire — à faire
+## 6. Question ouverte à instruire — fini
+
+Analyse et recommandation dans `DECISIONS.md` (04/10/2026). Rien de codé.
 
 Le passage en TypeScript / Cloudflare (P1) garde-t-il un sens si le
 produit n'héberge plus de tokens ? Ne pas coder : écrire l'analyse dans

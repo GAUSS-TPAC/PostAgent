@@ -93,3 +93,47 @@ Options   : (a) la garder : elle justifie `workers_dev = false`.
 Recommandé: (a), et assouplir le critère du backlog en « aucune
             instruction ne décrit `/trigger` ».
 Bloque    : item 3.
+
+## 2026-10-04 — Le portage TypeScript / Cloudflare (P1) garde-t-il un sens sans jetons hébergés ?
+
+Contexte  : le plan du 02/10 portait le cœur en TypeScript pour servir
+            plusieurs clients depuis une seule plateforme : une base, un
+            Durable Object par client, un retour OAuth public, un serveur
+            MCP distant. La forme auto-hébergée du 04/10 supprime la
+            plateforme commune. Ce qui tombe avec elle : la base, le
+            chiffrement des jetons, le verrou entre clients, la migration
+            d'Alan. Ce qui reste vrai :
+            - **contre le portage** : le cœur Python fait 250 lignes dont
+              chaque règle vient d'une mesure ou d'un incident
+              (échappement, UTF-16, 404 sur suppression, verrou). Le
+              porter oblige à rejouer les phases A, B et E, donc à
+              publier pour de vrai, avec toi. L'horloge actuelle tient
+              déjà 1,7 s de dérive : l'alarme d'un Durable Object
+              n'apporte plus rien de mesurable. Et §3.1 n'est pas
+              tranchée : réécrire avant de savoir si le produit se vend
+              est le mauvais ordre.
+            - **pour le portage** : il enlèverait deux dépendances à
+              l'installation chez un client — le compte GitHub et le
+              Python local. Un Worker peut recevoir le retour OAuth
+              (renouvellement sans terminal, étape P3) et servir un
+              serveur MCP distant (assistant sans rien installer, étape
+              P5). La forme Python + GitHub Actions ne peut ni l'un ni
+              l'autre : elle n'a aucune adresse publique, et celle du
+              Worker d'horloge a été retirée exprès le 22/09.
+Options   : (a) porter maintenant, comme prévu le 02/10.
+            (b) ne pas porter : garder Python + GitHub Actions + Worker
+            d'horloge comme socle du produit, installation accompagnée,
+            renouvellement fait avec le client tous les 60 jours.
+            (c) ne pas porter le cœur, mais décider au moment de P3 s'il
+            faut une adresse publique chez le client, et n'ajouter alors
+            que cela (un Worker de retour OAuth dans son compte), sans
+            toucher à `linkedin.py`.
+Recommandé: (c). La raison du portage a disparu ; celles qui restent ne
+            concernent que P3 et P5, pas le cœur, et se traitent par un
+            ajout, pas par une réécriture. Vendre d'abord une installation
+            accompagnée (P2) dira si le renouvellement à la main est
+            réellement le point de rupture. Ne rouvrir le portage du cœur
+            que si un client réel ne peut pas avoir de compte GitHub, ou
+            si un serveur MCP distant devient une condition de vente.
+Bloque    : étape P1 de `PRODUIT.md` (« trancher le socle »), donc toute
+            la découpe proposée. Aucun item du backlog.
