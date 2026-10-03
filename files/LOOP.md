@@ -166,6 +166,9 @@ Mis à jour par la boucle elle-même. Date obligatoire.
   argument publie les posts dus : ne jamais le lancer nu. `repo.sync()`
   pousse la branche courante avec `queue/` : ne l'appeler, ni `agenda.*`,
   que sur un dossier jetable. Contrôle : `tests/garde_fou.py`.
+- **04/10** — `import auth` (donc `import mcp_server`) exécute
+  `load_dotenv()` et charge `.env` dans le processus. Ne pas les importer
+  dans la boucle : `linkedin`, `publisher`, `agenda` et `repo` suffisent.
 - **23/09** — `pip install` concurrents : paquet corrompu, `ImportError`
   sur un paquet pourtant listé.
 - **23/09** — SDK `mcp` 2.x : `FastMCP` → `MCPServer`, `inputSchema` →

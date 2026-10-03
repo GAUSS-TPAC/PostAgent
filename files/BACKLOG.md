@@ -21,7 +21,9 @@ uniquement par `publish_now` (interdit à la boucle). Si un chemin
 
 ---
 
-## 2. Phase C de TESTING.md — à faire
+## 2. Phase C de TESTING.md — fini
+
+Joué le 04/10/2026 par `tests/phase_c.py` ; trois correctifs (voir `JOURNAL.md`).
 
 C.1 (token invalide), C.2 (token expiré), C.6 (URN absent), C.7 (réseau
 coupé). Jamais joués. Exigés avant la phase D.

@@ -98,7 +98,13 @@ def publish_due(commit):
 
     if due:
         # Token expiré ou révoqué : on échoue ici, avant d'avoir verrouillé un fichier.
-        linkedin.me()
+        try:
+            linkedin.me()
+        except OSError as exc:
+            # Réseau coupé, DNS, délai : requests.RequestException hérite
+            # d'OSError. Rien n'est verrouillé, le run suivant reprendra.
+            print(f"::error::Réseau injoignable avant toute publication, file intacte : {exc}")
+            return 1
 
     for path, post, scheduled in sorted(due, key=lambda item: item[2]):
         # Attente avant le verrou, jamais après : un run interrompu pendant

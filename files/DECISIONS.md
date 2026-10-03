@@ -24,3 +24,34 @@ Recommandé: (c), à faire par toi ou sous ta relecture : c'est le seul qui
             modifier le chemin de publication sans toi est exactement ce
             qu'elle ne doit pas faire.
 Bloque    : rien.
+
+## 2026-10-04 — Vérifier le nouveau contrôle d'expiration sur le vrai token
+
+Contexte  : `linkedin._credentials()` refuse désormais un `token.json` sans
+            `access_token`/`person_urn` ou dont `expires_at` est dépassé.
+            Testé sur des fichiers jetables seulement : la boucle n'a pas le
+            droit de lire le vrai. Si son `expires_at` avait une forme
+            inattendue (sans fuseau, par exemple), `publish_now` en local
+            échouerait — bruyamment, sans publier.
+Options   : lancer `.venv/bin/python linkedin.py --me` avant de fusionner
+            la branche : il doit rendre ton nom et ton URN.
+Recommandé: le faire avant la fusion ; trente secondes.
+Bloque    : rien dans le backlog ; conditionne la fusion de
+            `chantier/boucle-autonome`.
+
+## 2026-10-04 — Réseau coupé pendant le POST : quel message ?
+
+Contexte  : C.7 est joué pour tout ce qui précède le POST. La coupure
+            pendant le POST lui-même n'est pas testable sous verrou. Dans
+            `publisher.py --publish-now`, elle donne aujourd'hui une trace
+            Python nue ; dans `publish_due`, un `::error::` et le fichier
+            reste dans `publishing/`. Le fond du problème n'est pas la
+            trace : un délai dépassé **après** l'envoi ne dit pas si le
+            post est parti.
+Options   : (a) laisser tel quel : la trace nue ne ment pas.
+            (b) attraper l'erreur réseau dans `publish_now` et distinguer
+            « connexion jamais établie, rien n'est parti » de « délai
+            dépassé, vérifie ton profil avant de relancer ».
+Recommandé: (b), avec toi : le texte du second message engage ce que tu
+            feras devant un doute de doublon.
+Bloque    : rien.

@@ -53,3 +53,58 @@ Appris    : (1) le verrou est **opt-in** : il ne protège que si la variable
             dossier jetable. Consignés dans `LOOP.md` §7 ; question posée
             dans `DECISIONS.md`.
 Reste     : rien.
+
+## 2026-10-04T00:58 — 2. Phase C de TESTING.md
+
+Fait      : `tests/phase_c.py` créé (faux identifiants, jamais le vrai
+            `token.json` ; réseau coupé au niveau socket pour C.2, C.6, C.7).
+            Premier passage : trois défauts réels. Correctifs :
+            - `linkedin.py` `_credentials()` : `token.json` sans
+              `access_token` ou `person_urn` lève une `RuntimeError`
+              explicite (était un `KeyError` brut) ; `expires_at` dépassé
+              lève « relance python auth.py » avant tout appel réseau
+              (aucun contrôle auparavant). Module à 250 lignes, la limite.
+            - `publisher.py` `publish_due()` : une erreur réseau sur le
+              `me()` préalable rend 1 avec un `::error::` lisible, file
+              intacte (était une trace Python nue).
+            Quatre lignes ajoutées au journal des tests de `TESTING.md`.
+            Aucun de ces correctifs ne peut déclencher une publication :
+            ils ajoutent des refus.
+Preuve    : `POSTAGENT_DRY_RUN=1 .venv/bin/python tests/phase_c.py`
+
+Avant correctifs (code de sortie 1) :
+```
+C.2 : ÉCHEC — ConnectionError : HTTPSConnectionPool(host='api.linkedin.com', port=443): Max retries exceeded with url: /v2/userinfo (...[Errno 101] Network is unreachable")) — 4 tentative(s) réseau
+C.6 (environnement) : OK — RuntimeError : LINKEDIN_ACCESS_TOKEN défini sans LINKEDIN_PERSON_URN — 0 tentative(s) réseau
+C.6 (fichier) : ÉCHEC — KeyError : 'person_urn' — 0 tentative(s) réseau
+C.7 (publish) : OK — DryRunRefused, 0 tentative(s) réseau
+C.7 (publisher) : ÉCHEC — exception=ConnectionError, code=None, fichier resté dans queue/=True
+C.1 : OK — LinkedInError : LinkedIn a répondu 401 : {"status":401,"serviceErrorCode":65600,"code":"INVALID_ACCESS_TOKEN","message":"Invalid access token"}
+PHASE C : ÉCHEC sur C.2, C.6 (fichier), C.7 (publisher)
+```
+Après correctifs (code de sortie 0) :
+```
+C.2 : OK — RuntimeError : Token LinkedIn expiré depuis le 2026-10-02 : relance python auth.py — 0 tentative(s) réseau
+C.6 (environnement) : OK — RuntimeError : LINKEDIN_ACCESS_TOKEN défini sans LINKEDIN_PERSON_URN — 0 tentative(s) réseau
+C.6 (fichier) : OK — RuntimeError : token.json sans person_urn : relance python auth.py — 0 tentative(s) réseau
+C.7 (publish) : OK — DryRunRefused, 0 tentative(s) réseau
+::error::Réseau injoignable avant toute publication, file intacte : HTTPSConnectionPool(host='api.linkedin.com', port=443): Max retries exceeded with url: /v2/userinfo (...[Errno 101] Network is unreachable"))
+C.7 (publisher) : OK — exception=aucune, code=1, fichier resté dans queue/=True
+C.1 : OK — LinkedInError : LinkedIn a répondu 401 : {"status":401,"serviceErrorCode":65600,"code":"INVALID_ACCESS_TOKEN","message":"Invalid access token"}
+PHASE C : OK
+```
+Non-régression : `tests/garde_fou.py` → `GARDE-FOU OK`, code 0 ;
+`wc -l` → `linkedin.py` 250, `publisher.py` 219 ; `requirements.txt` inchangé.
+
+Appris    : (1) sous `DRY_RUN`, `publish()` refuse avant `_credentials()` :
+            C.2 et C.6 ne sont observables que par `me()`. (2) Écart de
+            protocole assumé : `TESTING.md` règle 3 veut Alan présent à tout
+            test ; le backlog confie ceux-ci à la boucle parce qu'aucun ne
+            publie. (3) Pour vérifier les imports, j'ai lancé une fois
+            `import mcp_server, agenda, auth` : `auth` charge `.env` dans le
+            processus. Rien n'a été affiché ni écrit, mais c'est à la limite
+            de l'interdit sur les secrets — consigné en piège, à ne pas
+            refaire.
+Reste     : non vérifié sur le vrai `token.json` (interdit à la boucle) et
+            coupure réseau pendant le POST non jouée — deux entrées dans
+            `DECISIONS.md`.

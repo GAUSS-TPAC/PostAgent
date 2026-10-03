@@ -21,6 +21,7 @@ import json
 import os
 import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import quote
 
@@ -86,6 +87,13 @@ def _credentials():
     if not TOKEN_FILE.exists():
         raise RuntimeError("Aucun identifiant : ni variables d'environnement, ni token.json")
     data = json.loads(TOKEN_FILE.read_text())
+    for champ in ("access_token", "person_urn"):
+        if not data.get(champ):
+            raise RuntimeError(f"token.json sans {champ} : relance python auth.py")
+    # Périmé : échec ici, sans appel réseau. Le 401 de LinkedIn ne dit pas quoi faire.
+    expire = data.get("expires_at")
+    if expire and datetime.fromisoformat(expire) <= datetime.now(timezone.utc):
+        raise RuntimeError(f"Token LinkedIn expiré depuis le {expire[:10]} : relance python auth.py")
     return data["access_token"], data["person_urn"]
 
 
