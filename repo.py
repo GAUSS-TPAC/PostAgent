@@ -5,14 +5,13 @@ Séparé de publisher.py pour deux raisons : le serveur MCP en a besoin sans
 vouloir la logique de publication, et chaque module doit rester lisible d'une
 traite (NF7).
 
-Toute commande est bornée dans le temps. Sans cela, une demande de phrase de
-passe GPG bloquerait le serveur MCP indéfiniment : un agent qui attend un
-prompt invisible est pire qu'un agent qui échoue.
+Toute commande est bornée dans le temps : un agent qui attend un prompt
+invisible (identifiants, phrase de passe) est pire qu'un agent qui échoue.
 """
 
 import subprocess
 
-LOCAL_TIMEOUT = 30    # add, commit : local, mais gpg peut réclamer une saisie
+LOCAL_TIMEOUT = 30    # add, commit : local
 NETWORK_TIMEOUT = 180  # pull, push : connexion lente assumée
 
 # Dossiers de la file, seuls à être commités par ces fonctions.
@@ -26,8 +25,9 @@ def _git(*args, timeout, check=True):
     except subprocess.TimeoutExpired:
         raise RuntimeError(
             f"git {' '.join(args)} n'a pas rendu la main en {timeout} s. "
-            "Cause probable : GPG attend une phrase de passe qu'aucun terminal "
-            "ne peut saisir ici. Lance la commande à la main, ou débloque l'agent gpg."
+            "Cause probable : connexion trop lente, ou git attend une saisie "
+            "(identifiants) qu'aucun terminal ne peut fournir ici. "
+            "Lance la commande à la main pour voir ce qu'il demande."
         ) from None
 
 
@@ -41,22 +41,22 @@ def pull():
     _git("pull", "-q", "--rebase", timeout=NETWORK_TIMEOUT)
 
 
-def sync(message, sign):
+def sync(message):
     """Commite et pousse l'état de la file. Lève une exception en cas d'échec.
 
     En CI, un déplacement non poussé n'existe pas : le run suivant repart du
     dépôt distant et verrait encore le fichier dans queue/. Le verrou réel est
     donc le push qui précède l'appel API, pas le déplacement local.
 
-    `sign` est explicite, sans valeur par défaut : le runner GitHub n'a pas de
-    clé et doit passer False, tandis qu'un commit fait sur le poste de l'auteur
-    doit être signé comme les siens. Se tromper de côté doit se voir à l'appel.
+    Ces commits ne sont jamais signés, ni en CI ni sur le poste de l'auteur.
+    Une signature atteste qu'un humain a fait le commit à son clavier ; ceux-ci
+    sont des opérations machine. Et le serveur MCP n'a pas de terminal : le
+    02/10/2026, pinentry y attendait une phrase de passe que personne ne
+    pouvait saisir, et un post programmé depuis la conversation n'est jamais
+    parti. Dans publish_now, le même blocage survenait APRÈS la publication.
     """
     _git("add", "-A", *SUIVIS, timeout=LOCAL_TIMEOUT)
-    commit = ["commit", "-q", "-m", message]
-    if not sign:
-        commit.insert(2, "--no-gpg-sign")
-    _git(*commit, timeout=LOCAL_TIMEOUT)
+    _git("commit", "-q", "--no-gpg-sign", "-m", message, timeout=LOCAL_TIMEOUT)
     if _git("push", "-q", timeout=NETWORK_TIMEOUT, check=False).returncode != 0:
         # Quelqu'un a poussé entre-temps (nouveau post programmé, annulation).
         # Si le rebase entre en conflit, on s'arrête : pas de publication.

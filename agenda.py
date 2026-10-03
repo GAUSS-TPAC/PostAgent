@@ -76,7 +76,7 @@ def schedule_post(text, scheduled_at, visibility):
         "visibility": visibility,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }, indent=2, ensure_ascii=False) + "\n")
-    repo.sync(f"Programme : {cible.name}", sign=True)
+    repo.sync(f"Programme : {cible.name}")
     return {"file": cible.name, "scheduled_at": quand.isoformat(),
             "visibility": visibility, "pushed": True}
 
@@ -120,5 +120,5 @@ def cancel_post(filename):
         raise FileNotFoundError(f"{filename} est introuvable dans queue/")
 
     cible.unlink()
-    repo.sync(f"Annulation : {filename}", sign=True)
+    repo.sync(f"Annulation : {filename}")
     return {"cancelled": filename, "pushed": True}

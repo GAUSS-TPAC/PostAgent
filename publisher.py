@@ -82,7 +82,7 @@ def publish_due(commit):
         print(f"::error::Fichier de queue invalide, mis de côté dans publishing/ : {error}")
         path.rename(PUBLISHING / path.name)
     if errors and commit:
-        repo.sync(f"Mise de côté de {len(errors)} fichier(s) de queue invalide(s)", sign=False)
+        repo.sync(f"Mise de côté de {len(errors)} fichier(s) de queue invalide(s)")
 
     # Périmés : sortis de la queue pour qu'ils ne soient plus jamais candidats,
     # mais jamais publiés. Republier à contretemps est un dégât public.
@@ -94,7 +94,7 @@ def publish_due(commit):
         )
         path.rename(STALE / path.name)
     if stale and commit:
-        repo.sync(f"Péremption de {len(stale)} post(s) non publié(s)", sign=False)
+        repo.sync(f"Péremption de {len(stale)} post(s) non publié(s)")
 
     if due:
         # Token expiré ou révoqué : on échoue ici, avant d'avoir verrouillé un fichier.
@@ -111,7 +111,7 @@ def publish_due(commit):
         locked = PUBLISHING / path.name
         path.rename(locked)
         if commit:
-            repo.sync(f"Publication en cours : {path.name}", sign=False)
+            repo.sync(f"Publication en cours : {path.name}")
 
         try:
             post["post_id"] = linkedin.publish(post["text"], post["visibility"])
@@ -124,7 +124,7 @@ def publish_due(commit):
         (PUBLISHED / path.name).write_text(json.dumps(post, indent=2, ensure_ascii=False) + "\n")
         locked.unlink()
         if commit:
-            repo.sync(f"Publié : {path.name}", sign=False)
+            repo.sync(f"Publié : {path.name}")
         print(f"Publié : {path.name} -> {post['post_id']}")
 
     if not due:
@@ -162,7 +162,7 @@ def publish_now(text, visibility):
             "published_at": now.isoformat(), "source": "publish_now",
         }, indent=2, ensure_ascii=False) + "\n")
         resultat["journal"] = str(path)
-        repo.sync(f"Publié (manuel) : {post_id}", sign=True)
+        repo.sync(f"Publié (manuel) : {post_id}")
         resultat["pushed"] = True
         resultat["message"] = f"Publié et journalisé : {post_id}"
     except Exception as exc:
