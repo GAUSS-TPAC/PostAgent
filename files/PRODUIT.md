@@ -10,6 +10,42 @@ instance est celle de ce dépôt.
 Ce document fixe ce qui est vendu, ce qui ne l'est jamais, ce qui change et
 l'ordre des travaux.
 
+## Décision du 12/10/2026 au soir — retour au SaaS multi-membres
+
+**Cette section l'emporte sur tout ce qui suit.** Alan a tranché : le but
+est un SaaS multi-membres, pour lui et ses proches d'abord, vendable
+ensuite. Un membre dit « rédige un post sur le RAG » ; le produit rédige,
+prépare un carrousel de 4 à 6 pages, publie à l'heure choisie et rend des
+statistiques.
+
+Cela annule la forme auto-hébergée du 04/10 et la décision « pas de
+portage » du matin même. Les sections « La forme : auto-hébergée »,
+« Socle technique » et « Découpe proposée » plus bas sont **caduques** ;
+elles restent pour l'historique, à réécrire.
+
+Construit le 12/10 dans `saas/`, sur la branche `chantier/saas` (voir
+`saas/README.md` pour l'état exact) : connexion LinkedIn sur invitation,
+jetons chiffrés, posts texte / image / PDF / carrousel, ordonnanceur,
+interface, rédaction assistée. Testé contre un faux LinkedIn ; **aucune
+publication réelle n'a encore emprunté ce chemin.**
+
+Ce que cette décision rouvre, sans le résoudre :
+
+- **Les trois clauses de P0 reviennent** (§1.4 critère 5, §3.1, §8.2). Une
+  seule app qui publie pour d'autres membres, et que l'on vend, est le cas
+  que le programme Self-Serve exclut. Entre proches et gratuitement,
+  l'exposition est faible. Avant de vendre : demander la Community
+  Management API (organisation enregistrée, page vérifiée, revue par
+  LinkedIn).
+- **Les statistiques** dépendent de cette même approbation
+  (`r_member_postAnalytics`). D'ici là le produit répond « indisponible ».
+- **Les obligations sur les données d'autrui s'appliquent** : consentement
+  (fait), suppression à la demande (fait), chiffrement (fait), incident
+  signalé à LinkedIn sous 24 h et procédure écrite (à faire), conditions
+  d'utilisation et politique de confidentialité relues (projet seulement).
+- **Reste à construire** : vidéo, images générées, serveur MCP distant,
+  plafond d'usage de la rédaction assistée, facturation.
+
 ## La forme : auto-hébergée
 
 | | Service hébergé (abandonné le 04/10) | Logiciel auto-hébergé (retenu) |

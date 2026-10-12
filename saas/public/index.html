@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PostAgent</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <header class="barre">
+    <strong class="marque">PostAgent</strong>
+    <span id="qui" class="doux"></span>
+    <form method="post" action="/auth/logout" id="sortie" hidden><button class="lien">Se déconnecter</button></form>
+  </header>
+
+  <main>
+    <p id="message" class="bandeau" hidden></p>
+
+    <!-- Visiteur non connecté -->
+    <section id="connexion" class="carte" hidden>
+      <h1>Écris, programme, publie sur LinkedIn.</h1>
+      <p class="doux">Texte, image, PDF ou carrousel. Tu choisis l'heure et la visibilité ; rien ne part sans toi.</p>
+      <form method="post" action="/auth/login">
+        <label>Code d'invitation <span class="doux">(première connexion seulement)</span>
+          <input name="invite" autocomplete="off">
+        </label>
+        <label class="case">
+          <input type="checkbox" name="consent" value="oui" required>
+          <span>J'autorise PostAgent à publier sur mon profil LinkedIn les posts que je programme, et à conserver
+          pour cela mon nom, mon identifiant LinkedIn et un jeton d'accès chiffré, valable deux mois. Je peux tout
+          supprimer à tout moment depuis « Mon compte ». <a href="/confidentialite.html">Détail des données</a>.</span>
+        </label>
+        <button class="principal">Se connecter avec LinkedIn</button>
+      </form>
+    </section>
+
+    <!-- Membre connecté -->
+    <div id="app" hidden>
+      <section class="carte">
+        <h2>Nouveau post</h2>
+        <div class="ligne" id="assistant">
+          <input id="sujet" maxlength="600" placeholder="Un sujet : « le RAG expliqué simplement »" aria-label="Sujet du post">
+          <label class="choix"><input type="checkbox" id="avec-carrousel"> avec carrousel</label>
+          <button type="button" id="rediger">Rédiger un brouillon</button>
+        </div>
+        <p class="doux">Le brouillon remplit le formulaire ci-dessous. Relis-le : c'est toi qui programmes.</p>
+        <form id="composer">
+          <textarea id="texte" rows="7" placeholder="Ton texte…" required></textarea>
+          <p class="doux droite"><span id="compteur">0</span> / 3000</p>
+
+          <fieldset>
+            <legend>Pièce jointe</legend>
+            <label class="choix"><input type="radio" name="media" value="" checked> Aucune</label>
+            <label class="choix"><input type="radio" name="media" value="image"> Image</label>
+            <label class="choix"><input type="radio" name="media" value="document"> PDF</label>
+            <label class="choix"><input type="radio" name="media" value="carousel"> Carrousel</label>
+          </fieldset>
+
+          <div id="bloc-fichier" hidden>
+            <input type="file" id="fichier">
+            <label id="bloc-titre">Titre du document <input id="titre-doc" maxlength="200"></label>
+            <p class="doux">1,5 Mo maximum pour l'instant.</p>
+          </div>
+
+          <div id="bloc-carrousel" hidden>
+            <label>Signature en bas de page <input id="auteur" maxlength="80" placeholder="Ton nom · ton activité"></label>
+            <label>Thème
+              <select id="theme"><option value="nuit">Nuit</option><option value="clair">Clair</option></select>
+            </label>
+            <ol id="pages"></ol>
+            <p>
+              <button type="button" id="ajouter-page">Ajouter une page</button>
+              <button type="button" id="apercu">Aperçu</button>
+            </p>
+            <iframe id="cadre-apercu" title="Aperçu du carrousel" hidden></iframe>
+          </div>
+
+          <fieldset>
+            <legend>Visibilité <span class="doux">(à choisir, aucune par défaut)</span></legend>
+            <label class="choix"><input type="radio" name="visibility" value="CONNECTIONS" required> Mes relations</label>
+            <label class="choix"><input type="radio" name="visibility" value="PUBLIC"> Tout le monde</label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Quand</legend>
+            <label class="choix"><input type="radio" name="quand" value="plus-tard" checked> Le
+              <input type="datetime-local" id="date"></label>
+            <label class="choix"><input type="radio" name="quand" value="now"> Dès que possible <span class="doux">(dans la minute)</span></label>
+          </fieldset>
+
+          <button class="principal">Programmer</button>
+        </form>
+      </section>
+
+      <section class="carte" id="zone-trancher" hidden>
+        <h2>À trancher</h2>
+        <p class="doux">Ces posts ne sont pas partis comme prévu. Rien ne repartira sans ta décision.
+          Regarde ton profil LinkedIn avant de reprogrammer : une erreur ne prouve pas que rien n'a été publié.</p>
+        <ul id="liste-trancher" class="posts"></ul>
+      </section>
+
+      <section class="carte"><h2>Programmés</h2><ul id="liste-programmes" class="posts"></ul></section>
+      <section class="carte"><h2>Publiés</h2><ul id="liste-publies" class="posts"></ul></section>
+
+      <section class="carte">
+        <h2>Mon compte</h2>
+        <p id="acces"></p>
+        <form method="post" action="/auth/login" class="ligne">
+          <label class="case"><input type="checkbox" name="consent" value="oui" required>
+            <span>Je renouvelle mon autorisation de publier sur mon profil.</span></label>
+          <button>Renouveler l'accès LinkedIn</button>
+        </form>
+        <p><button id="supprimer-compte" class="danger">Supprimer mon compte et toutes mes données</button></p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="doux"><a href="/confidentialite.html">Données et confidentialité</a> · PostAgent n'est ni affilié à LinkedIn ni approuvé par LinkedIn.</footer>
+  <script src="/app.js" defer></script>
+</body>
+</html>

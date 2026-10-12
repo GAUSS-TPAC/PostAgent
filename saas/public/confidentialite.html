@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Données et confidentialité — PostAgent</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <header class="barre"><strong class="marque"><a href="/">PostAgent</a></strong></header>
+  <main>
+    <section class="carte">
+      <h1>Données et confidentialité</h1>
+      <p class="bandeau">Projet de texte, décrivant ce que le logiciel fait réellement. À faire relire avant
+        l'ouverture au public : il ne remplace ni des conditions d'utilisation ni un avis juridique.</p>
+
+      <h2>Ce que PostAgent conserve</h2>
+      <ul>
+        <li>ton nom et ton identifiant de membre LinkedIn, reçus quand tu te connectes ;</li>
+        <li>un jeton d'accès LinkedIn, valable deux mois, <strong>chiffré</strong> ; la clé de chiffrement
+          n'est pas dans la base de données ;</li>
+        <li>la date de ton dernier consentement ;</li>
+        <li>tes posts : texte, visibilité, heure prévue, pièce jointe, et l'identifiant LinkedIn du post une
+          fois publié. La pièce jointe est effacée dès la publication.</li>
+      </ul>
+
+      <h2>Ce que PostAgent ne fait pas</h2>
+      <ul>
+        <li>il ne lit ni ton réseau, ni tes messages, ni les posts des autres membres ;</li>
+        <li>il ne publie rien que tu n'aies programmé toi-même, avec une visibilité que tu as choisie ;</li>
+        <li>il ne transmet tes données à personne et ne s'en sert pas pour de la publicité ;</li>
+        <li>le texte de tes posts n'apparaît pas dans les journaux techniques.</li>
+      </ul>
+
+      <h2>Quand tes données sont utilisées</h2>
+      <p>À la connexion, pour t'identifier. À l'heure d'un post, pour le publier sur ton profil. Quand tu
+        demandes les statistiques d'un post, si LinkedIn les met à disposition.</p>
+
+      <h2>Retirer ton consentement, supprimer tes données</h2>
+      <p>Dans « Mon compte », le bouton « Supprimer mon compte et toutes mes données » efface immédiatement ton
+        jeton, tes posts et tes sessions. Tu peux aussi révoquer l'application depuis les réglages de LinkedIn.
+        Les posts déjà publiés restent sur LinkedIn : ils t'appartiennent et se suppriment depuis ton profil.</p>
+      <p>Tous les deux mois, LinkedIn exige une nouvelle autorisation : PostAgent te redemande alors ton
+        consentement.</p>
+
+      <h2>Hébergement</h2>
+      <p>PostAgent tourne sur Cloudflare. PostAgent n'est ni affilié à LinkedIn ni approuvé par LinkedIn.</p>
+    </section>
+  </main>
+</body>
+</html>

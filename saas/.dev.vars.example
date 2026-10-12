@@ -1,0 +1,6 @@
+# Copie ce fichier en .dev.vars pour `wrangler dev`. Valeurs factices : en local
+# le verrou de publication est fermé, rien ne part vers LinkedIn.
+LINKEDIN_CLIENT_ID=dev
+LINKEDIN_CLIENT_SECRET=dev
+TOKEN_KEY=BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc=
+INVITE_CODE=dev

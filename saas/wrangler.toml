@@ -1,0 +1,53 @@
+name = "postagent"
+main = "src/index.js"
+compatibility_date = "2026-09-21"
+
+# Interface : fichiers statiques servis par la plateforme, sans passer par le
+# code. Ce qui ne correspond à aucun fichier (/api, /auth) arrive au Worker.
+[assets]
+directory = "./public"
+
+# L'ordonnanceur, chaque minute. Il ne publie que si POSTAGENT_LIVE vaut "1".
+[triggers]
+crons = ["* * * * *"]
+
+# Base de développement, locale. `wrangler dev` n'y touche que sur le poste.
+[[d1_databases]]
+binding = "DB"
+database_name = "postagent-dev"
+database_id = "00000000-0000-0000-0000-000000000000"
+
+[observability]
+enabled = true
+
+# ---------------------------------------------------------------------------
+# Production. `wrangler deploy --env production`.
+#
+# POSTAGENT_LIVE n'existe QUE dans ce bloc : en local et en test, le verrou de
+# publication est fermé et rien ne peut partir vers LinkedIn.
+#
+# Secrets, jamais ici — `wrangler secret put <NOM> --env production` :
+#   LINKEDIN_CLIENT_ID, LINKEDIN_CLIENT_SECRET   identifiants de l'app LinkedIn
+#   TOKEN_KEY     32 octets en base64 : `openssl rand -base64 32`
+#   INVITE_CODE   code d'inscription à donner aux invités
+# ---------------------------------------------------------------------------
+[env.production]
+name = "postagent"
+
+[env.production.vars]
+POSTAGENT_LIVE = "1"
+
+[env.production.assets]
+directory = "./public"
+
+[env.production.triggers]
+crons = ["* * * * *"]
+
+# Base créée le 12/10/2026 (région WEUR), schéma appliqué le même jour.
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "postagent"
+database_id = "99cf5e43-a71b-4484-93c2-f860e8d63765"
+
+[env.production.observability]
+enabled = true
