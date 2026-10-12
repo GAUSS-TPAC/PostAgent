@@ -24,6 +24,8 @@ Recommandé: (c), à faire par toi ou sous ta relecture : c'est le seul qui
             modifier le chemin de publication sans toi est exactement ce
             qu'elle ne doit pas faire.
 Bloque    : rien.
+Décidé    : le 12/10/2026, Alan retient la recommandation — option (c), inverser le verrou. Non exécuté : à faire sous la
+            relecture d'Alan, sur une branche.
 
 ## 2026-10-04 — Vérifier le nouveau contrôle d'expiration sur le vrai token
 
@@ -38,6 +40,8 @@ Options   : lancer `.venv/bin/python linkedin.py --me` avant de fusionner
 Recommandé: le faire avant la fusion ; trente secondes.
 Bloque    : rien dans le backlog ; conditionne la fusion de
             `chantier/boucle-autonome`.
+Décidé    : le 12/10/2026, Alan retient la recommandation — à lancer avant la fusion de `chantier/boucle-autonome`. Non
+            exécuté.
 
 ## 2026-10-04 — Réseau coupé pendant le POST : quel message ?
 
@@ -55,6 +59,8 @@ Options   : (a) laisser tel quel : la trace nue ne ment pas.
 Recommandé: (b), avec toi : le texte du second message engage ce que tu
             feras devant un doute de doublon.
 Bloque    : rien.
+Décidé    : le 12/10/2026, Alan retient la recommandation — option (b). Non exécuté : le texte du message reste à écrire
+            avec Alan.
 
 ## 2026-10-04 — Supprimer `stale/2026-09-16T1523.json` ?
 
@@ -68,6 +74,7 @@ Recommandé: (a). Attention, `TESTING.md` ligne 243 le cite encore comme
             jeu de test d'E.13 (sous son ancien chemin `queue/`) : à
             corriger dans le même commit.
 Bloque    : item 3.
+Décidé    : le 12/10/2026, Alan retient la recommandation — option (a), avec la correction de `TESTING.md`. Non exécuté.
 
 ## 2026-10-04 — Secret Worker `TRIGGER_KEY` à supprimer
 
@@ -80,6 +87,8 @@ Options   : `cd clock && npx wrangler secret delete TRIGGER_KEY`, puis
 Recommandé: le supprimer : un secret sans usage reste un secret à faire
             fuiter.
 Bloque    : item 3.
+Décidé    : le 12/10/2026, Alan retient la recommandation — à supprimer. Non exécuté : geste d'Alan, sur son compte
+            Cloudflare.
 
 ## 2026-10-04 — Garder la mention historique de `/trigger` dans `clock/README.md` ?
 
@@ -93,6 +102,8 @@ Options   : (a) la garder : elle justifie `workers_dev = false`.
 Recommandé: (a), et assouplir le critère du backlog en « aucune
             instruction ne décrit `/trigger` ».
 Bloque    : item 3.
+Décidé    : le 12/10/2026, Alan retient la recommandation — option (a), la mention reste. Le critère de l'item 3 du
+            backlog reste à assouplir en conséquence.
 
 ## 2026-10-04 — Le portage TypeScript / Cloudflare (P1) garde-t-il un sens sans jetons hébergés ?
 
@@ -137,3 +148,6 @@ Recommandé: (c). La raison du portage a disparu ; celles qui restent ne
             si un serveur MCP distant devient une condition de vente.
 Bloque    : étape P1 de `PRODUIT.md` (« trancher le socle »), donc toute
             la découpe proposée. Aucun item du backlog.
+Décidé    : le 12/10/2026, Alan retient la recommandation — option (c). Le cœur n'est pas porté ; la question d'une
+            adresse publique chez le client se posera à l'étape P3. Reporté
+            dans `PRODUIT.md`.

@@ -185,10 +185,21 @@ est exactement la forme auto-hébergée.
 
 ## Socle technique
 
-Non tranché. Le plan du 02/10 portait le cœur en TypeScript sur Cloudflare
-pour servir plusieurs clients depuis une seule plateforme. Cette raison a
-disparu avec la forme hébergée ; reste à savoir si d'autres la remplacent.
-Instruit dans `DECISIONS.md`, à trancher en P1.
+Tranché le 12/10/2026 : **le cœur n'est pas porté.** Le socle du produit
+reste celui de l'instance d'Alan — Python, GitHub Actions, Worker d'horloge.
+
+Le plan du 02/10 portait le cœur en TypeScript sur Cloudflare pour servir
+plusieurs clients depuis une seule plateforme ; cette raison a disparu avec
+la forme hébergée. Les 250 lignes de `linkedin.py` viennent chacune d'une
+mesure ou d'un incident : les réécrire obligerait à rejouer les phases A, B
+et E, donc à publier pour de vrai, sans rien gagner de mesurable.
+
+Ce qui reste ouvert, et seulement à l'étape P3 : la forme actuelle n'a
+aucune adresse publique, donc ni retour OAuth sans terminal, ni serveur MCP
+distant. S'il en faut une chez le client, on ajoutera cela seul (un Worker
+dans son compte), sans toucher au cœur. Le portage ne se rouvre que si un
+client réel ne peut pas avoir de compte GitHub, ou si un serveur MCP distant
+devient une condition de vente. Analyse complète dans `DECISIONS.md`.
 
 ## Données et sécurité
 
@@ -229,7 +240,7 @@ Durable Objects, migration d'Alan) est abandonnée avec la forme hébergée.
 | Étape | Contenu | Validation |
 |---|---|---|
 | P0 | Lecture des API Terms of Use | faite ; reste à décider si §3.1 est un risque acceptable, pour Alan et pour un client |
-| P1 | Trancher le socle : garder Python + GitHub Actions + Worker d'horloge, ou porter | décision écrite ici, avec sa raison |
+| P1 | Trancher le socle : garder Python + GitHub Actions + Worker d'horloge, ou porter | **fait le 12/10/2026** : pas de portage, voir « Socle technique » |
 | P2 | Installation rejouable, sans secret chez Sentinelle : de comptes vides à un post programmé, app LinkedIn créée par le client | une seconde instance installée sur des comptes qui ne sont pas ceux d'Alan, sans que Sentinelle ait vu un seul secret |
 | P3 | Renouvellement sans terminal : le client refait l'autorisation LinkedIn seul, depuis l'alerte à J−7 | un non-technicien renouvelle son accès sans aide |
 | P4 | Interface de l'instance : calendrier, décisions, renouvellement | un non-technicien programme et annule un post sans aide |
