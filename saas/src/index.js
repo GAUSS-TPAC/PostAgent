@@ -10,7 +10,7 @@
  */
 
 import { api } from "./api.js";
-import { demarrer, membreCourant, retour, sortir } from "./oauth.js";
+import { cheminRetour, demarrer, membreCourant, retour, sortir } from "./oauth.js";
 import { executer } from "./scheduler.js";
 
 const json = (corps, status) => Response.json(corps, { status });
@@ -19,7 +19,7 @@ async function router(request, env) {
   const { pathname } = new URL(request.url);
 
   if (pathname === "/auth/login" && request.method === "POST") return demarrer(request, env);
-  if (pathname === "/auth/callback" && request.method === "GET") return retour(request, env);
+  if (pathname === cheminRetour(env) && request.method === "GET") return retour(request, env);
   if (pathname === "/auth/logout" && request.method === "POST") return sortir(request, env);
 
   if (pathname.startsWith("/api/")) {

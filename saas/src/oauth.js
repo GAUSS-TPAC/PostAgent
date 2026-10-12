@@ -20,7 +20,10 @@ const PORTEE = "openid profile email w_member_social";
 const COOKIE = "sid";
 
 const origine = (request, env) => env.PUBLIC_URL || new URL(request.url).origin;
-const retourUrl = (request, env) => `${origine(request, env)}/auth/callback`;
+// Le chemin de retour doit être, au caractère près, celui déclaré chez
+// LinkedIn. En local on réutilise celui de l'instance Python (/callback).
+export const cheminRetour = (env) => env.CALLBACK_PATH || "/auth/callback";
+const retourUrl = (request, env) => `${origine(request, env)}${cheminRetour(env)}`;
 const accueil = (message) => new Response(null, { status: 303, headers: { Location: `/?${new URLSearchParams(message)}` } });
 
 /** Comparaison en temps constant, pour ne pas laisser deviner le code d'invitation. */

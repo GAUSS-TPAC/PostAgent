@@ -4,3 +4,8 @@ LINKEDIN_CLIENT_ID=dev
 LINKEDIN_CLIENT_SECRET=dev
 TOKEN_KEY=BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc=
 INVITE_CODE=dev
+# Test en local avec ton vrai compte : `npm run local` sert sur le port 8000,
+# et ce chemin correspond à l'URL de retour déjà déclarée chez LinkedIn
+# (http://localhost:8000/callback). Mets alors les vrais identifiants de l'app
+# ci-dessus. Facultatif : ANTHROPIC_API_KEY pour la rédaction assistée.
+CALLBACK_PATH=/callback

@@ -96,6 +96,13 @@ test("connexion : consentement exigé, état à usage unique, invitation pour le
     : Response.json({ sub: "carla", name: "Carla" })));
   const retour = (s) => worker.fetch(new Request(`${BASE}/auth/callback?code=c&state=${s}`), m.env);
 
+  // Chemin de retour configurable : l'URL envoyée à LinkedIn et la route suivent ensemble.
+  const local = { ...m.env, CALLBACK_PATH: "/callback" };
+  const depart = await worker.fetch(new Request(`${BASE}/auth/login`, { method: "POST", body: new URLSearchParams({ consent: "oui" }) }), local);
+  assert.equal(new URL(depart.headers.get("Location")).searchParams.get("redirect_uri"), `${BASE}/callback`);
+  assert.equal((await worker.fetch(new Request(`${BASE}/auth/callback?state=x`), local)).status, 404);
+  assert.equal((await worker.fetch(new Request(`${BASE}/callback?state=x`), local)).status, 303);
+
   const refuse = await retour(await state({ consent: "oui", invite: "faux" }));
   assert.match(decodeURIComponent(refuse.headers.get("Location")), /invitation/);
   assert.equal(await store.membreParUrn(m.DB, "urn:li:person:carla"), null);
