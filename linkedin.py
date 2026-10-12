@@ -21,6 +21,7 @@ import json
 import os
 import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import quote
 
@@ -46,18 +47,18 @@ _LITTLE_RESERVED = re.compile(r"([\\|{}@\[\]()<>*_~])")
 # à 3 000. Vérifié sur Microsoft Learn le 21/09/2026.
 MAX_COMMENTARY = 3000
 
-# Verrou de répétition. Quand POSTAGENT_DRY_RUN vaut 1, publish() refuse juste
-# avant l'appel réseau : la validation est exercée, rien n'atteint LinkedIn.
+# Verrou de publication, fermé par défaut depuis le 12/10/2026 : publish()
+# refuse juste avant l'appel réseau sauf si POSTAGENT_LIVE vaut 1, posé
+# seulement dans publish.yml et dans la config du serveur MCP. Un oubli ne
+# publie donc plus. POSTAGENT_DRY_RUN=1 refuse toujours, même avec LIVE.
 #
 # Raison d'être, constatée le 23/09/2026 : un test censé prouver qu'une
-# publication échoue a publié pour de vrai, parce que le token qu'il croyait
-# avoir corrompu était encore accepté. Une règle de prudence ne suffit pas —
-# il faut un interrupteur que le test pose lui-même.
-DRY_RUN_ENV = "POSTAGENT_DRY_RUN"
+# publication échoue a publié pour de vrai, avec un token cru corrompu.
+DRY_RUN_ENV, LIVE_ENV = "POSTAGENT_DRY_RUN", "POSTAGENT_LIVE"
 
 
 class DryRunRefused(RuntimeError):
-    """publish() appelé alors que le verrou de répétition est posé."""
+    """publish() appelé alors que le verrou de publication est fermé."""
 
 
 class LinkedInError(RuntimeError):
@@ -86,6 +87,13 @@ def _credentials():
     if not TOKEN_FILE.exists():
         raise RuntimeError("Aucun identifiant : ni variables d'environnement, ni token.json")
     data = json.loads(TOKEN_FILE.read_text())
+    for champ in ("access_token", "person_urn"):
+        if not data.get(champ):
+            raise RuntimeError(f"token.json sans {champ} : relance python auth.py")
+    # Périmé : échec ici, sans appel réseau. Le 401 de LinkedIn ne dit pas quoi faire.
+    expire = data.get("expires_at")
+    if expire and datetime.fromisoformat(expire) <= datetime.now(timezone.utc):
+        raise RuntimeError(f"Token LinkedIn expiré depuis le {expire[:10]} : relance python auth.py")
     return data["access_token"], data["person_urn"]
 
 
@@ -141,11 +149,11 @@ def publish(text, visibility):
     # Dernier point d'arrêt avant le réseau. Placé ici et non en tête de
     # fonction : les contrôles de texte et de visibilité doivent rester
     # testables, seule la publication est interdite.
-    if os.getenv(DRY_RUN_ENV) == "1":
+    if os.getenv(DRY_RUN_ENV) == "1" or os.getenv(LIVE_ENV) != "1":
         raise DryRunRefused(
-            f"{DRY_RUN_ENV}=1 : publication refusée avant tout appel réseau. "
+            f"Publication refusée avant tout appel réseau ({DRY_RUN_ENV} posé ou {LIVE_ENV} absent). "
             f"Texte de {utf16_length(commentary)} unités, visibilité {visibility}. "
-            "Retire la variable d'environnement pour publier réellement."
+            f"Publier réellement exige {LIVE_ENV}=1 et pas de {DRY_RUN_ENV}."
         )
 
     token, urn = _credentials()

@@ -32,7 +32,10 @@ rester gratuite et permanente.
    n'y a pas de valeur par défaut. Un fichier de queue sans `visibility` est
    refusé. Publier depuis le terminal passe par
    `publisher.py --publish-now "<texte>" --visibility PUBLIC|CONNECTIONS`, qui
-   journalise le `post_id` dans `published/`. Ne rétablis aucun défaut, même
+   journalise le `post_id` dans `published/`. Depuis le 12/10/2026, rien ne
+   publie sans `POSTAGENT_LIVE=1` dans l'environnement : la variable n'est
+   posée que dans `publish.yml` et la config du serveur MCP, jamais dans un
+   test. Ne rétablis aucun défaut, même
    « raisonnable » : c'est exactement ce qui a produit l'incident du
    14/09/2026 (voir TESTING.md). Un post publié sans trace est un post qu'on
    ne sait plus supprimer — l'API ne permet pas de relire ses propres posts

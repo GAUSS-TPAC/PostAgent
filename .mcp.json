@@ -9,7 +9,10 @@
       "command": ".venv/bin/python",
       "args": [
         "mcp_server.py"
-      ]
+      ],
+      "env": {
+        "POSTAGENT_LIVE": "1"
+      }
     }
   }
 }

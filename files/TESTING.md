@@ -59,7 +59,9 @@ Conséquences, non négociables :
 5. **Toute la phase C tourne avec `POSTAGENT_DRY_RUN=1`.** Le verrou refuse
    toute publication juste avant l'appel réseau, après les contrôles : la
    validation reste testable, rien n'atteint LinkedIn. Aucun scénario de la
-   phase C n'a besoin de publier.
+   phase C n'a besoin de publier. Depuis le 12/10/2026 le verrou est en plus
+   fermé par défaut : publier exige `POSTAGENT_LIVE=1`, qu'aucun test ne pose
+   seul.
 6. **Ne jette jamais le retour de `publish()`.** Sans le `post_id`, le post est
    irrécupérable : l'API refuse de lister les posts du membre (`403`, scope
    `r_member_social` non accordé), et la suppression ne reste possible que
@@ -240,8 +242,9 @@ possible : un doublon sur le profil. Ne les traite pas comme optionnels.
 
 E.13 se teste sans risque : le post ne doit jamais atteindre LinkedIn. Si un
 `post_id` apparaît, le seuil de péremption ne fonctionne pas — arrête tout.
-Le fichier `queue/2026-09-16T1523.json`, périmé de plusieurs jours, sert
-précisément à ce test.
+Le fichier `2026-09-16T1523.json` a servi à ce test le 18/09/2026 ; il a été
+retiré de `stale/` le 12/10/2026 (`git show 89b952a` en garde le contenu).
+Pour rejouer E.13, écrire un fichier daté à −4 h.
 
 E.14 vérifie l'autre moitié : une fois dans `stale/`, un post ne doit plus
 faire échouer les runs suivants, sinon l'alerte se noie dans son bruit.
@@ -291,3 +294,8 @@ Une ligne par exécution. C'est la seule trace que ce protocole doit laisser.
 | 23/09/2026 | E.15 horloge externe | **OK** | Worker déployé le 22/09, dispatch toutes les 15 min, premier tick 2 min après le déploiement |
 | 22/09/2026 | Incident | **ÉCHEC, clos** | post « test » du 14/09 resté 8 jours en PUBLIC ; `post_id` perdu, donc supprimé à la main par Alan depuis l'interface le 22/09. Trois garde-fous ajoutés le même jour |
 | 21/09/2026 | C.5 texte à la limite | OK | 3 000 unités UTF-16 dont emoji hors BMP : `urn:li:share:7507594360507682816` accepté puis supprimé |
+| 04/10/2026 | C.1 token invalide | OK | `me()` avec un jeton entièrement faux, seul appel réseau de la série : `LinkedInError : LinkedIn a répondu 401 : {"status":401,"serviceErrorCode":65600,"code":"INVALID_ACCESS_TOKEN","message":"Invalid access token"}` |
+| 04/10/2026 | C.2 token expiré | OK après correctif | avant : aucun contrôle local, 4 tentatives réseau puis `ConnectionError`. Après (`linkedin._credentials`) : `RuntimeError : Token LinkedIn expiré depuis le 2026-10-02 : relance python auth.py`, 0 tentative réseau. Ne couvre que `token.json` : en CI le token vient d'un secret sans date, l'expiration y reste détectée par le 401 de `me()` |
+| 04/10/2026 | C.6 URN absent | OK après correctif | environnement : `RuntimeError : LINKEDIN_ACCESS_TOKEN défini sans LINKEDIN_PERSON_URN`. Fichier, avant : `KeyError : 'person_urn'` brut ; après : `RuntimeError : token.json sans person_urn : relance python auth.py`. 0 tentative réseau dans les deux cas |
+| 04/10/2026 | C.7 réseau coupé | OK après correctif | réseau coupé au niveau socket (`Errno 101`), verrou `DRY_RUN` posé. `publish()` : `DryRunRefused`, 0 tentative. `publisher.py`, avant : `ConnectionError` nue ; après : `::error::Réseau injoignable avant toute publication, file intacte : …`, code 1, fichier resté dans `queue/`. **Non joué** : coupure pendant le POST lui-même, qui exigerait de lever le verrou |
+| 12/10/2026 | Verrou inversé | OK | `tests/garde_fou.py` : sans aucune variable, `publish`, `publish_now` et `publish_due` refusent avant le réseau (fichier resté dans `queue/`) ; avec `DRY_RUN=1` et `LIVE=1`, refus également. `tests/phase_c.py` : `PHASE C : OK`. Aucune publication réelle jouée avec `POSTAGENT_LIVE=1` |
