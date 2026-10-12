@@ -51,7 +51,8 @@ Worker interdits à la boucle, mention historique dans `clock/`) : voir
 - `README.md` et `CLAUDE.md` : vérifier qu'aucune instruction ne décrit
   encore l'endpoint `/trigger`, supprimé le 22/09.
 
-**Fini quand** : le dépôt ne contient plus de référence à `/trigger`, le
+**Fini quand** : aucune instruction du dépôt ne décrit plus `/trigger` (la
+mention historique de `clock/README.md` reste, décision du 12/10/2026), le
 fichier `stale/` est supprimé, et le secret Worker est consigné dans
 `DECISIONS.md`.
 
