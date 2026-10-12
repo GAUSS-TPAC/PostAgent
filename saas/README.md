@@ -101,3 +101,9 @@ facturer, l'exposition est faible ; vendu, elle ne l'est plus.
 | `src/crypto.js` | chiffrement des jetons |
 | `public/` | l'interface, servie en fichiers statiques |
 | `schema.sql` | la base |
+| `docs/` | cahier des charges et guide d'utilisation (Markdown, PDF, diagrammes, captures) |
+
+Les PDF de `docs/` se régénèrent par `python3 saas/docs/build_docs.py`
+(pandoc et google-chrome). Les diagrammes sont décrits dans
+`docs/diagrammes.py` ; les captures d'écran viennent de l'application
+lancée en local avec des données de démonstration.
