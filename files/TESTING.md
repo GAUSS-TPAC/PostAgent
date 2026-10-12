@@ -240,8 +240,9 @@ possible : un doublon sur le profil. Ne les traite pas comme optionnels.
 
 E.13 se teste sans risque : le post ne doit jamais atteindre LinkedIn. Si un
 `post_id` apparaît, le seuil de péremption ne fonctionne pas — arrête tout.
-Le fichier `queue/2026-09-16T1523.json`, périmé de plusieurs jours, sert
-précisément à ce test.
+Le fichier `2026-09-16T1523.json` a servi à ce test le 18/09/2026 ; il a été
+retiré de `stale/` le 12/10/2026 (`git show 89b952a` en garde le contenu).
+Pour rejouer E.13, écrire un fichier daté à −4 h.
 
 E.14 vérifie l'autre moitié : une fois dans `stale/`, un post ne doit plus
 faire échouer les runs suivants, sinon l'alerte se noie dans son bruit.

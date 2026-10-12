@@ -45,6 +45,7 @@ Worker interdits à la boucle, mention historique dans `clock/`) : voir
 `DECISIONS.md`.
 
 - `stale/2026-09-16T1523.json` : déchet du test de péremption du 18/09.
+  **Supprimé le 12/10/2026.**
 - Secret `TRIGGER_KEY` encore présent côté Worker (sans effet depuis le
   plan B). Demande `wrangler secret delete` → **interdit à la boucle**,
   donc va dans `DECISIONS.md`.
