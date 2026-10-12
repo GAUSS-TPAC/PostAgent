@@ -59,7 +59,9 @@ Conséquences, non négociables :
 5. **Toute la phase C tourne avec `POSTAGENT_DRY_RUN=1`.** Le verrou refuse
    toute publication juste avant l'appel réseau, après les contrôles : la
    validation reste testable, rien n'atteint LinkedIn. Aucun scénario de la
-   phase C n'a besoin de publier.
+   phase C n'a besoin de publier. Depuis le 12/10/2026 le verrou est en plus
+   fermé par défaut : publier exige `POSTAGENT_LIVE=1`, qu'aucun test ne pose
+   seul.
 6. **Ne jette jamais le retour de `publish()`.** Sans le `post_id`, le post est
    irrécupérable : l'API refuse de lister les posts du membre (`403`, scope
    `r_member_social` non accordé), et la suppression ne reste possible que
@@ -296,3 +298,4 @@ Une ligne par exécution. C'est la seule trace que ce protocole doit laisser.
 | 04/10/2026 | C.2 token expiré | OK après correctif | avant : aucun contrôle local, 4 tentatives réseau puis `ConnectionError`. Après (`linkedin._credentials`) : `RuntimeError : Token LinkedIn expiré depuis le 2026-10-02 : relance python auth.py`, 0 tentative réseau. Ne couvre que `token.json` : en CI le token vient d'un secret sans date, l'expiration y reste détectée par le 401 de `me()` |
 | 04/10/2026 | C.6 URN absent | OK après correctif | environnement : `RuntimeError : LINKEDIN_ACCESS_TOKEN défini sans LINKEDIN_PERSON_URN`. Fichier, avant : `KeyError : 'person_urn'` brut ; après : `RuntimeError : token.json sans person_urn : relance python auth.py`. 0 tentative réseau dans les deux cas |
 | 04/10/2026 | C.7 réseau coupé | OK après correctif | réseau coupé au niveau socket (`Errno 101`), verrou `DRY_RUN` posé. `publish()` : `DryRunRefused`, 0 tentative. `publisher.py`, avant : `ConnectionError` nue ; après : `::error::Réseau injoignable avant toute publication, file intacte : …`, code 1, fichier resté dans `queue/`. **Non joué** : coupure pendant le POST lui-même, qui exigerait de lever le verrou |
+| 12/10/2026 | Verrou inversé | OK | `tests/garde_fou.py` : sans aucune variable, `publish`, `publish_now` et `publish_due` refusent avant le réseau (fichier resté dans `queue/`) ; avec `DRY_RUN=1` et `LIVE=1`, refus également. `tests/phase_c.py` : `PHASE C : OK`. Aucune publication réelle jouée avec `POSTAGENT_LIVE=1` |

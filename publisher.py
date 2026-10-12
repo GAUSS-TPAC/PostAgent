@@ -11,10 +11,13 @@ Usage:
     python publisher.py              # local : déplace les fichiers, sans git
     python publisher.py --commit     # CI : chaque étape est poussée avant la suivante
     python publisher.py --days-left  # jours restants avant expiration du token
-    python publisher.py --publish-now "texte" --visibility CONNECTIONS
+    POSTAGENT_LIVE=1 python publisher.py --publish-now "texte" --visibility CONNECTIONS
+
+Sans POSTAGENT_LIVE=1 dans l'environnement, rien ne publie (voir linkedin.py).
 """
 
 import json
+import os
 import sys
 import time
 from datetime import datetime, timedelta, timezone
@@ -95,6 +98,13 @@ def publish_due(commit):
         path.rename(STALE / path.name)
     if stale and commit:
         repo.sync(f"Péremption de {len(stale)} post(s) non publié(s)")
+
+    if due and os.getenv(linkedin.LIVE_ENV) != "1":
+        # Verrou fermé : on le dit avant de déplacer quoi que ce soit, sinon le
+        # fichier resterait coincé dans publishing/ pour une simple variable oubliée.
+        print(f"::error::{len(due)} post(s) dû(s) mais {linkedin.LIVE_ENV} n'est pas posé : "
+              "rien n'est publié, file intacte")
+        return 1
 
     if due:
         # Token expiré ou révoqué : on échoue ici, avant d'avoir verrouillé un fichier.

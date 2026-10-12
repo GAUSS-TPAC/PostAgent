@@ -161,6 +161,9 @@ C'est le cas précis où il faut s'arrêter et écrire dans
 
 Mis à jour par la boucle elle-même. Date obligatoire.
 
+- **12/10** — Verrou inversé : rien ne publie sans `POSTAGENT_LIVE=1`.
+  Ne jamais poser cette variable dans la boucle. L'entrée du 04/10
+  ci-dessous reste la règle de prudence, plus la seule protection.
 - **04/10** — Le verrou `POSTAGENT_DRY_RUN` est opt-in. Préfixer **toute**
   commande Python par `POSTAGENT_DRY_RUN=1`. `python publisher.py` sans
   argument publie les posts dus : ne jamais le lancer nu. `repo.sync()`

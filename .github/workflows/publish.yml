@@ -39,6 +39,9 @@ jobs:
         env:
           LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
           LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
+          # Ouvre le verrou de publication. C'est l'un des deux seuls endroits
+          # où cette variable est posée (l'autre : le serveur MCP, .mcp.json).
+          POSTAGENT_LIVE: "1"
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

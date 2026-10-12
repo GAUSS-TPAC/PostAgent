@@ -3,9 +3,11 @@ Vérifie le garde-fou de publication. Ne publie rien, ne lit aucun secret.
 
 Deux preuves, toutes deux capables d'échouer :
   1. statique — le dépôt ne contient qu'UN appel capable d'atteindre
-     /rest/posts, et il est placé après le verrou POSTAGENT_DRY_RUN ;
-  2. dynamique — verrou posé, les trois appelants (linkedin.publish,
-     publisher.publish_now, publisher.publish_due) s'arrêtent avant le réseau.
+     /rest/posts, et il est placé après le verrou de publication ;
+  2. dynamique — les trois appelants (linkedin.publish, publisher.publish_now,
+     publisher.publish_due) s'arrêtent avant le réseau, sans aucune variable
+     posée (verrou fermé par défaut) puis avec DRY_RUN=1 malgré LIVE=1.
+     POSTAGENT_LIVE=1 n'est jamais posé seul.
 
 Le réseau est coupé deux fois (requests.post et socket.connect) : si le verrou
 cédait, le test échouerait au lieu de publier.
@@ -72,42 +74,53 @@ def preuve_statique():
     print(f"  verrou ligne {verrou}, POST ligne {vers_posts[0][1]}, tous deux dans publish()")
 
 
-def preuve_dynamique():
+def file_jetable(tmp, texte):
+    """Une file dans un dossier temporaire : jamais les dossiers réels, jamais git."""
+    for nom in ("QUEUE", "PUBLISHING", "PUBLISHED", "STALE"):
+        dossier = Path(tmp) / nom.lower()
+        dossier.mkdir()
+        setattr(publisher, nom, dossier)
+    du = datetime.now(timezone.utc) - timedelta(minutes=1)
+    (publisher.QUEUE / "test.json").write_text(json.dumps(
+        {"text": texte, "scheduled_at": du.isoformat(), "visibility": "CONNECTIONS"}))
+
+
+def preuve_dynamique(cas, reste_dans):
+    """Les trois appelants refusent. `reste_dans` : où publish_due laisse le fichier."""
     texte = "GARDE-FOU : ce texte ne doit jamais partir"
 
     try:
         linkedin.publish(texte, "CONNECTIONS")
         raise AssertionError("linkedin.publish n'a pas refusé")
     except linkedin.DryRunRefused:
-        print("  linkedin.publish       : refusé (DryRunRefused)")
+        print(f"  [{cas}] linkedin.publish      : refusé (DryRunRefused)")
 
     try:
         publisher.publish_now(texte, "CONNECTIONS")
         raise AssertionError("publisher.publish_now n'a pas refusé")
     except linkedin.DryRunRefused:
-        print("  publisher.publish_now  : refusé (DryRunRefused)")
+        print(f"  [{cas}] publisher.publish_now : refusé (DryRunRefused)")
 
-    # publish_due sur une file jetable : jamais les dossiers réels, jamais git.
     with tempfile.TemporaryDirectory() as tmp:
-        for nom in ("QUEUE", "PUBLISHING", "PUBLISHED", "STALE"):
-            dossier = Path(tmp) / nom.lower()
-            dossier.mkdir()
-            setattr(publisher, nom, dossier)
-        du = datetime.now(timezone.utc) - timedelta(minutes=1)
-        (publisher.QUEUE / "test.json").write_text(json.dumps(
-            {"text": texte, "scheduled_at": du.isoformat(), "visibility": "CONNECTIONS"}))
+        file_jetable(tmp, texte)
         linkedin.me = lambda: {"name": "test"}  # sinon : appel réseau avec le token
-
         code = publisher.publish_due(commit=False)
         assert code == 1, code
-        assert (publisher.PUBLISHING / "test.json").exists()
+        assert (getattr(publisher, reste_dans) / "test.json").exists()
         assert not list(publisher.PUBLISHED.iterdir())
-        print("  publisher.publish_due  : refusé, fichier resté dans publishing/, code 1")
+        print(f"  [{cas}] publisher.publish_due : refusé, code 1, fichier dans {reste_dans.lower()}/")
 
 
 if __name__ == "__main__":
     print("Preuve statique")
     preuve_statique()
-    print("Preuve dynamique (POSTAGENT_DRY_RUN=1, réseau coupé)")
-    preuve_dynamique()
+    print("Preuve dynamique, réseau coupé")
+    # Le cas qui compte : aucune variable posée. Un oubli ne doit pas publier.
+    os.environ.pop("POSTAGENT_DRY_RUN")
+    assert "POSTAGENT_LIVE" not in os.environ, "POSTAGENT_LIVE traîne dans l'environnement"
+    preuve_dynamique("aucune variable", reste_dans="QUEUE")
+    # Ceinture et bretelles : DRY_RUN l'emporte même si LIVE est posé.
+    os.environ.update(POSTAGENT_DRY_RUN="1", POSTAGENT_LIVE="1")
+    preuve_dynamique("DRY_RUN=1 et LIVE=1", reste_dans="PUBLISHING")
+    del os.environ["POSTAGENT_LIVE"]
     print("GARDE-FOU OK")

@@ -26,6 +26,9 @@ Recommandé: (c), à faire par toi ou sous ta relecture : c'est le seul qui
 Bloque    : rien.
 Décidé    : le 12/10/2026, Alan retient la recommandation — option (c), inverser le verrou. Non exécuté : à faire sous la
             relecture d'Alan, sur une branche.
+Exécuté   : le 12/10/2026, sur la branche : `linkedin.py`, `publisher.py`,
+            `publish.yml`, tests. **Non fait : `.mcp.json`**, voir la dernière
+            entrée. À relire par Alan avant fusion.
 
 ## 2026-10-04 — Vérifier le nouveau contrôle d'expiration sur le vrai token
 
@@ -42,6 +45,8 @@ Bloque    : rien dans le backlog ; conditionne la fusion de
             `chantier/boucle-autonome`.
 Décidé    : le 12/10/2026, Alan retient la recommandation — à lancer avant la fusion de `chantier/boucle-autonome`. Non
             exécuté.
+Exécuté   : le 12/10/2026 : `linkedin.me()` sur le vrai token rend un nom
+            et un URN au bon format ; 31 jours restants.
 
 ## 2026-10-04 — Réseau coupé pendant le POST : quel message ?
 
@@ -75,6 +80,7 @@ Recommandé: (a). Attention, `TESTING.md` ligne 243 le cite encore comme
             corriger dans le même commit.
 Bloque    : item 3.
 Décidé    : le 12/10/2026, Alan retient la recommandation — option (a), avec la correction de `TESTING.md`. Non exécuté.
+Exécuté   : le 12/10/2026 (commit `5bb2e48`), `TESTING.md` corrigé.
 
 ## 2026-10-04 — Secret Worker `TRIGGER_KEY` à supprimer
 
@@ -151,3 +157,21 @@ Bloque    : étape P1 de `PRODUIT.md` (« trancher le socle »), donc toute
 Décidé    : le 12/10/2026, Alan retient la recommandation — option (c). Le cœur n'est pas porté ; la question d'une
             adresse publique chez le client se posera à l'étape P3. Reporté
             dans `PRODUIT.md`.
+
+## 2026-10-12 — Ajouter `POSTAGENT_LIVE=1` à `.mcp.json` avant de fusionner
+
+Contexte  : le verrou est inversé sur la branche. `publish.yml` pose la
+            variable, donc les posts programmés partiront. `.mcp.json` ne
+            la pose pas : l'assistant n'a pas le droit de modifier sa
+            propre configuration, l'édition a été refusée. Sans elle,
+            `publish_now` depuis la conversation refusera (sans publier) ;
+            `schedule_post`, `list_queue` et `cancel_post` ne sont pas
+            concernés.
+Options   : dans `.mcp.json`, sous `"args"` du serveur `post-agent`,
+            ajouter `"env": { "POSTAGENT_LIVE": "1" }`, puis relancer
+            Claude Code. Ou ne pas l'ajouter et réserver la publication
+            immédiate au terminal (`POSTAGENT_LIVE=1 python publisher.py
+            --publish-now …`).
+Recommandé: l'ajouter, dans le même commit que la fusion.
+Bloque    : la fusion de `chantier/boucle-autonome`, si tu veux garder
+            `publish_now` en conversation.

@@ -122,7 +122,9 @@ def c7_reseau_coupe():
 
     # Le publisher, réseau coupé, sur une file jetable : il doit rendre 1 avec
     # un message, laisser le fichier dans queue/, et ne pas lever d'exception.
-    with tempfile.TemporaryDirectory() as tmp, identifiants(env=env), reseau_coupe():
+    # LIVE=1 seulement ici, avec DRY_RUN=1 et le réseau coupé : sans lui, le
+    # publisher s'arrête au verrou et n'atteint jamais l'appel réseau à tester.
+    with tempfile.TemporaryDirectory() as tmp, identifiants(env={**env, "POSTAGENT_LIVE": "1"}), reseau_coupe():
         for nom in ("QUEUE", "PUBLISHING", "PUBLISHED", "STALE"):
             (Path(tmp) / nom.lower()).mkdir()
             setattr(publisher, nom, Path(tmp) / nom.lower())

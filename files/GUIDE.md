@@ -253,7 +253,7 @@ Quand l'assistant n'est pas disponible :
 ```bash
 python auth.py --status                       # état du token et du secret CI
 python publisher.py --days-left               # jours restants
-python publisher.py --publish-now "texte" --visibility CONNECTIONS
+POSTAGENT_LIVE=1 python publisher.py --publish-now "texte" --visibility CONNECTIONS
 python linkedin.py --me                       # identité, sans rien publier
 python linkedin.py --delete urn:li:share:…    # supprimer un post publié
 gh workflow run publish.yml                   # forcer un run du publisher
@@ -283,6 +283,8 @@ un post sans `post_id` noté ne se supprime plus que depuis l'interface web.
 - **Garde chaque `post_id`.** Sans lui, pas de suppression par l'API.
 - **Après un échec, regarde le profil avant de relancer.** Une erreur HTTP ne
   prouve pas que rien n'est parti.
+- **Rien ne publie sans `POSTAGENT_LIVE=1`** (depuis le 12/10/2026), posé
+  seulement dans le workflow et la config du serveur MCP.
 - **Pour tester, `POSTAGENT_DRY_RUN=1`.** LinkedIn n'a pas de bac à sable :
   tout appel réussi est une vraie publication. Un post de test est en
   `CONNECTIONS` et supprimé dans la foulée.
